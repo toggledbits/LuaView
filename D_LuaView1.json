@@ -1,0 +1,60 @@
+{
+	"default_icon": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+	"x": 2,
+	"y": 4,
+	"inScene": 1,
+	"Tabs": [{
+			"Label": {
+				"lang_tag": "tabname_control",
+				"text": "Control"
+			},
+			"Position": 0,
+			"TabType": "flash",
+			"ControlGroup": [{
+				"id": 1,
+				"scenegroup": 1
+			}],
+			"SceneGroup": [{
+				"id": 1,
+				"top": 0,
+				"left": 0,
+				"x": 1,
+				"y": 1
+			}],
+			"Control": []
+		},
+		{
+			"Label": {
+				"lang_tag": "tb_luaview_scenes",
+				"text": "Scene Lua"
+			},
+			"Position": 1,
+			"TabType": "javascript",
+			"TopNavigationTab": 1,
+			"ScriptName": "J_LuaView1_UI7.js",
+			"Function": "LuaView.doSceneLua"
+		},
+		{
+			"Label": {
+				"lang_tag": "tb_luaview_startup",
+				"text": "Startup Lua"
+			},
+			"Position": 1,
+			"TabType": "javascript",
+			"TopNavigationTab": 1,
+			"ScriptName": "J_LuaView1_UI7.js",
+			"Function": "LuaView.doStartupLua"
+		}, {
+			"Label": {
+				"lang_tag": "ui7_advanced",
+				"text": "Advanced"
+			},
+			"Position": 2,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		}
+	],
+	"eventList2": [],
+	"device_type": "urn:schemas-toggledbits-com:device:LuaView:1"
+}

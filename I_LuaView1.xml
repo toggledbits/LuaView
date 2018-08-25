@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<implementation>
+    <functions>
+        -- --------------------------------------------------------------------
+        -- LuaView, Patrick H. Rigney (rigpapa). 
+        -- Completely and totally open source. Contributions welcome!
+        -- --------------------------------------------------------------------
+        function startLuaView(dev)
+            luup.log("LuaView 1.0")
+            luup.register_handler("LuaViewRequestHandler", "LuaView")
+            return true, "OK", "LuaView"
+        end
+        
+        function LuaViewRequestHandler( lul_request, lul_parameters, lul_outputformat )
+            if lul_parameters.action == "saveStartupLua" then
+                local lua = lul_parameters.lua or ""
+                if lua == "" then
+                    luup.attr_set( "StartupCode", "", 0 )
+                    luup.attr_set( "encoded_lua", 0, 0 )
+                    luup.log("LuaView: cleared startup Lua")
+                else
+                    local mime = require("mime")
+                    luup.attr_set( "StartupCode", mime.b64( lua ), 0 )
+                    luup.attr_set( "encoded_lua", 1, 0 )
+                    luup.log("LuaView: updated startup Lua")
+                end
+                return "OK", "text/plain"
+             end
+             return "Invalid request", "text/plain"
+        end
+    </functions>
+    <startup>startLuaView</startup>
+    <actionList>
+    </actionList>
+</implementation>
