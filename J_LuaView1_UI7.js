@@ -66,7 +66,7 @@ var LuaView = (function(api) {
         var f = jQuery( ev.currentTarget );
         f.addClass("modified");
         var lua = f.val() || "";
-        lua = lua.replace( /\s*$/, "" ); // rtrim
+        lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
         var scene = f.closest('div.row').attr( 'id' );
         D("Changed " + scene);
         if ( scene == "__startup" ) {
@@ -91,6 +91,16 @@ var LuaView = (function(api) {
                 alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
             });
         } else {
+            if ( lua !== "" ) {
+                var lines = lua.split( /(\r|\n)+/ );
+                /* Remove trailing comments. Always leave one line, so test works if Lua is all comments (still needs return) */
+                while ( lines.length > 1 && ( lines[lines.length-1].match(/^\s*--/) || lines[lines.length-1].match(/^\s*$/) ) ) {
+                    lines.pop();
+                }
+                if ( lines.length > 0 && ! lines[lines.length-1].match(/^return/) ) {
+                    alert( 'Your scene Lua may not return "true" or "false", which Luup expects. This can cause unpredictable scene behavior. If your returns are buried in conditionals or loops, I can\'t see them; just make sure your code always exits with a return.' );
+                }
+            }
             D("Loading scene data from " + url);
             scene = parseInt( scene );
             /* Query the scene as it currently is. */
