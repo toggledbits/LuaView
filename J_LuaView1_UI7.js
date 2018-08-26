@@ -17,6 +17,7 @@ var LuaView = (function(api) {
 	var serviceId = "urn:toggledbits-com:serviceId:LuaView1";
 	// var deviceType = "urn:schemas-toggledbits-com:device:LuaView:1";
 	var configModified = false;
+    var isOpenLuup = false;
 	
 	function D(m) {
 		console.log("J_LuaView1_UI7.js: " + m);
@@ -24,6 +25,13 @@ var LuaView = (function(api) {
 
 	function initModule() {
 		D("jQuery version is " + String( jQuery.fn.jquery ) );
+        var ud = api.getUserData();
+        for (var i=0; i < ud.devices.length; ++i ) {
+            if ( ud.devices[i].device_type == "openLuup" ) {
+                isOpenLuup = true;
+                break;
+            }
+        }
 	}
 
 	/* Push header to document head */
@@ -80,7 +88,9 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				if ( data == "OK" ) {
 					f.removeClass("modified");
-					alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
+                    if ( ! isOpenLuup ) {
+                        alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
+                    }
 				} else {
 					throw new Error( "Save returned: " + data );
 				}
@@ -111,12 +121,12 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				// Excellent.
 				D( "Loaded the scene, updating..." );
-				if ( lua !== "" ) {
+                if ( lua == "" || isOpenLuup ) {
+					data.encoded_lua = 0;
+					data.lua = lua;
+                } else {
 					data.encoded_lua = 1;
 					data.lua = btoa( lua );
-				} else {
-					data.encoded_lua = 0;
-					data.lua = "";
 				}
 				// Save it.
 				var ux = JSON.stringify( data );
@@ -128,7 +138,7 @@ var LuaView = (function(api) {
 					dataType: "text",
 					timeout: 5000
 				}).done( function( data, statusText, jqXHR ) {
-					D("Save successful, I think... " + jqXHR.responseText);
+					D("Save returns " + jqXHR.responseText);
 					if ( data == "OK" ) {
 						f.removeClass("modified");
 					} else {
