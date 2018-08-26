@@ -6,7 +6,7 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.0")
+            luup.log("LuaView 1.1develop")
             luup.register_handler("LuaViewRequestHandler", "LuaView")
             return true, "OK", "LuaView"
         end
