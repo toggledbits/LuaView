@@ -194,8 +194,8 @@ var LuaView = (function(api) {
 	function doStartupLua() {
 		initModule();
 
-		var html = '<div id="codelist">';
-		html += '</div>'; // codelist
+		var html = '<div id="startup">';
+		html += '</div>'; // startup
 
 		html += footer();
 		
@@ -204,7 +204,7 @@ var LuaView = (function(api) {
 		api.setCpanelContent( html );
 
 		var ud = api.getUserData();
-		var list = jQuery("div#codelist");
+		var list = jQuery("div#startup");
 		var el = jQuery('<div class="row"></div>');
 		el.attr('id', '__startup');
 		el.append('<div class="col-xs-12 col-lg-12"><textarea class="luacode form-control" rows="8"></textarea></div>');
