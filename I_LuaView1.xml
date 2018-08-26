@@ -6,24 +6,32 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.0")
+            luup.log("LuaView 1.1")
+            isOpenLuup = false;
+            for _,v in pairs( luup.devices ) do
+                if v.device_type == "openLuup" then
+                    isOpenLuup = true
+                    break
+                end
+            end
+            luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
             luup.register_handler("LuaViewRequestHandler", "LuaView")
             return true, "OK", "LuaView"
         end
         
         function LuaViewRequestHandler( lul_request, lul_parameters, lul_outputformat )
+            local isOpenLuup = luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", dev ) or "0"
             if lul_parameters.action == "saveStartupLua" then
                 local lua = lul_parameters.lua or ""
-                if lua == "" then
-                    luup.attr_set( "StartupCode", "", 0 )
+                if lua == "" or isOpenLuup ~= "0" then
+                    luup.attr_set( "StartupCode", lua, 0 )
                     luup.attr_set( "encoded_lua", 0, 0 )
-                    luup.log("LuaView: cleared startup Lua")
                 else
                     local mime = require("mime")
                     luup.attr_set( "StartupCode", mime.b64( lua ), 0 )
                     luup.attr_set( "encoded_lua", 1, 0 )
-                    luup.log("LuaView: updated startup Lua")
                 end
+                luup.log("LuaView: updated startup Lua")
                 return "OK", "text/plain"
              end
              return "Invalid request", "text/plain"
