@@ -1,13 +1,13 @@
-//# sourceURL=J_LuaView1_UI7.js
+//# sourceURL=J_LuaView1_ALTUI.js
 /**
- * J_LuaView1_UI7.js
+ * J_LuaView1_ALTUI.js
  * Configuration interface for LuaView.
  */
-/* globals api,jsonp,jQuery */
+/* globals api,jQuery,ace */
 
-//"use strict"; // fails on UI7, works fine with ALTUI
+//"use strict"; // fails on ALTUI, works fine with ALTUI
 
-var LuaView = (function(api) {
+var LuaViewALTUI = (function(api) {
 
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
@@ -17,21 +17,21 @@ var LuaView = (function(api) {
 	var serviceId = "urn:toggledbits-com:serviceId:LuaView1";
 	// var deviceType = "urn:schemas-toggledbits-com:device:LuaView:1";
 	var configModified = false;
-    var isOpenLuup = false;
+	var isOpenLuup = false;
 	
 	function D(m) {
-		console.log("J_LuaView1_UI7.js: " + m);
+		console.log("J_LuaView1_ALTUI.js: " + m);
 	}
 
 	function initModule() {
 		D("jQuery version is " + String( jQuery.fn.jquery ) );
-        var ud = api.getUserData();
-        for (var i=0; i < ud.devices.length; ++i ) {
-            if ( ud.devices[i].device_type == "openLuup" ) {
-                isOpenLuup = true;
-                break;
-            }
-        }
+		var ud = api.getUserData();
+		for (var i=0; i < ud.devices.length; ++i ) {
+			if ( ud.devices[i].device_type == "openLuup" ) {
+				isOpenLuup = true;
+				break;
+			}
+		}
 	}
 
 	/* Push header to document head */
@@ -40,8 +40,9 @@ var LuaView = (function(api) {
 
 		html = '<style>';
 		html += 'input.narrow { max-width: 8em; }';
+		html += 'div.coderow { padding-top: 8px; }';
 		html += 'textarea.luacode { font-family: monospace; resize: vertical; }';
-		html += 'textarea.modified { background-color: #ffcccc; }';
+		html += 'div.modified { background-color: #ffcccc; }';
 		html += 'div#tbcopyright { display: block; margin: 12px 0 12px; 0; }';
 		html += 'div#tbbegging { display: block; font-size: 1.25em; line-height: 1.4em; color: #ff6600; margin-top: 12px; }';
 		html += '</style>';
@@ -64,18 +65,18 @@ var LuaView = (function(api) {
 		D( 'onBeforeCpanelClose args: ' + JSON.stringify(args) );
 	}
 	
-	/* */
-	function handleSaveClick( ev ) {
-		/* context?? */
+	function handleEditorChange( editor, session, delta ) {
+		configModified = true;
+        jQuery( editor.container ).closest('div.row').addClass('modified');
 	}
 	
-	function handleTextChange( ev ) {
+	function handleEditorSave( editor, session, ev ) {
 		var url = api.getDataRequestURL();
-		var f = jQuery( ev.currentTarget );
+		var f = jQuery( ev.currentTarget ).closest( 'div.row' );
 		f.addClass("modified");
-		var lua = f.val() || "";
+		var lua = session.getValue();
 		lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
-		var scene = f.closest('div.row').attr( 'id' );
+		var scene = f.attr( 'id' );
 		D("Changed " + scene);
 		if ( scene == "__startup" ) {
 			D("Posting startup lua change to to " + url);
@@ -88,9 +89,10 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				if ( data == "OK" ) {
 					f.removeClass("modified");
-                    if ( ! isOpenLuup ) {
-                        alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
-                    }
+					if ( ! isOpenLuup ) {
+						alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
+					}
+					configModified = false;
 				} else {
 					throw new Error( "Save returned: " + data );
 				}
@@ -121,10 +123,10 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				// Excellent.
 				D( "Loaded the scene, updating..." );
-                if ( lua == "" || isOpenLuup ) {
+				if ( lua == "" || isOpenLuup ) {
 					data.encoded_lua = 0;
 					data.lua = lua;
-                } else {
+				} else {
 					data.encoded_lua = 1;
 					data.lua = btoa( lua );
 				}
@@ -141,6 +143,7 @@ var LuaView = (function(api) {
 					D("Save returns " + jqXHR.responseText);
 					if ( data == "OK" ) {
 						f.removeClass("modified");
+						configModified = false;
 					} else {
 						throw new Error( "Save replied: " + String(data) );
 					}
@@ -156,6 +159,38 @@ var LuaView = (function(api) {
 				alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
 			});
 		}
+	}
+
+	function makeEditor( elem, scene ) {
+		var editor = ace.edit( jQuery(elem).get(0), {
+			minLines: 8,
+			maxLines: 32,
+			theme: "ace/theme/xcode",
+			mode: "ace/mode/lua",
+            fontSize: "16px",
+			tabSize: 4
+		});
+		var exopts = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "AceOptions" ) || "";
+		if ( exopts !== "" ) {
+            try {
+                var opts = JSON.parse( exopts );
+                if ( opts !== undefined ) {
+                    editor.setOptions( opts );
+                }
+            } catch( e ) {
+                alert("Can't apply your custom AceOptions: " + String(e));
+            }
+		}
+		var code;
+		if ( ( scene.encoded_lua || 0 ) != 0 ) {
+			code = atob( scene.lua ) || "??";
+		} else {
+			code = scene.lua || "";
+		}
+		var session = editor.session;
+		session.setValue( code );
+		editor.on( 'change', function( delta ) { handleEditorChange( editor, session, delta ); } );
+		editor.on( 'blur', function( ev ) { handleEditorSave( editor, session, ev ); } );
 	}
 
 	/* */
@@ -177,17 +212,13 @@ var LuaView = (function(api) {
 		scenes.sort( function( a, b ) { return a.name < b.name ? -1 : 1; } );
 		var list = jQuery("div#codelist");
 		for (var i=0; i<scenes.length; ++i) {
-			var el = jQuery('<div class="row"></div>');
+			var el = jQuery('<div class="coderow row"></div>');
 			el.attr('id', scenes[i].id);
 			el.append('<div class="col-xs-12 col-md-4 col-lg-2">' + scenes[i].name + ' (#' + scenes[i].id + ')</div>');
-			el.append('<div class="col-xs-12 col-md-8 col-lg-10"><textarea class="luacode form-control" rows="8"></textarea></div>');
-			if ( ( scenes[i].encoded_lua || 0 ) != 0 ) {
-				jQuery('textarea', el).val( atob(scenes[i].lua) || "??" );
-			} else {
-				jQuery('textarea', el).val( scenes[i].lua || "" );
-			}
-			list.append(el);
-			jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
+			el.append('<div class="ace-field col-xs-12 col-md-8 col-lg-10"></div>');
+			jQuery('div.ace-field', el).attr('id', 'editor' + scenes[i].id);
+			list.append( el );
+			makeEditor( '#editor'+scenes[i].id, scenes[i] );
 		}
 	}
 	
@@ -207,14 +238,9 @@ var LuaView = (function(api) {
 		var list = jQuery("div#startup");
 		var el = jQuery('<div class="row"></div>');
 		el.attr('id', '__startup');
-		el.append('<div class="col-xs-12 col-lg-12"><textarea class="luacode form-control" rows="8"></textarea></div>');
-		if ( ( ud.encoded_lua || 0 ) != 0 && ud.StartupCode ) {
-			jQuery('textarea', el).val( atob( ud.StartupCode ) || "??" );
-		} else {
-			jQuery('textarea', el).val( ud.StartupCode || "" );
-		}
+		el.append('<div id="editorStartup" class="ace-field col-xs-12 col-lg-12"></div>');
 		list.append(el);
-		jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
+        makeEditor( '#editorStartup', { id: "__startup", encoded_lua: ud.encoded_lua, lua: ud.StartupCode } );
 	}
 
 	myModule = {

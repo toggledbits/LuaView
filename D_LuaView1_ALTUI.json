@@ -45,8 +45,8 @@
 			"Position": 1,
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
-			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doSceneLua"
+			"ScriptName": "J_LuaView1_ALTUI.js",
+			"Function": "LuaViewALTUI.doSceneLua"
 		},
 		{
 			"Label": {
@@ -56,8 +56,8 @@
 			"Position": 2,
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
-			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doStartupLua"
+			"ScriptName": "J_LuaView1_ALTUI.js",
+			"Function": "LuaViewALTUI.doStartupLua"
 		}, {
 			"Label": {
 				"lang_tag": "ui7_advanced",
