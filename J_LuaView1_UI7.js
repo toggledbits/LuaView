@@ -17,21 +17,21 @@ var LuaView = (function(api) {
 	var serviceId = "urn:toggledbits-com:serviceId:LuaView1";
 	// var deviceType = "urn:schemas-toggledbits-com:device:LuaView:1";
 	var configModified = false;
-    var isOpenLuup = false;
-	
+	var isOpenLuup = false;
+
 	function D(m) {
 		console.log("J_LuaView1_UI7.js: " + m);
 	}
 
 	function initModule() {
 		D("jQuery version is " + String( jQuery.fn.jquery ) );
-        var ud = api.getUserData();
-        for (var i=0; i < ud.devices.length; ++i ) {
-            if ( ud.devices[i].device_type == "openLuup" ) {
-                isOpenLuup = true;
-                break;
-            }
-        }
+		var ud = api.getUserData();
+		for (var i=0; i < ud.devices.length; ++i ) {
+			if ( ud.devices[i].device_type == "openLuup" ) {
+				isOpenLuup = true;
+				break;
+			}
+		}
 	}
 
 	/* Push header to document head */
@@ -63,12 +63,12 @@ var LuaView = (function(api) {
 	function onBeforeCpanelClose(args) {
 		D( 'onBeforeCpanelClose args: ' + JSON.stringify(args) );
 	}
-	
+
 	/* */
 	function handleSaveClick( ev ) {
 		/* context?? */
 	}
-	
+
 	function handleTextChange( ev ) {
 		var url = api.getDataRequestURL();
 		var f = jQuery( ev.currentTarget );
@@ -88,9 +88,9 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				if ( data == "OK" ) {
 					f.removeClass("modified");
-                    if ( ! isOpenLuup ) {
-                        alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
-                    }
+					if ( ! isOpenLuup ) {
+						alert("Startup Lua saved, but you must hard-refresh your browser to get the UI to show it consistently. Sorry. Trying to figure out a way around this.");
+					}
 				} else {
 					throw new Error( "Save returned: " + data );
 				}
@@ -121,10 +121,10 @@ var LuaView = (function(api) {
 			}).done( function( data, statusText, jqXHR ) {
 				// Excellent.
 				D( "Loaded the scene, updating..." );
-                if ( lua == "" || isOpenLuup ) {
+				if ( lua == "" || isOpenLuup ) {
 					data.encoded_lua = 0;
 					data.lua = lua;
-                } else {
+				} else {
 					data.encoded_lua = 1;
 					data.lua = btoa( lua );
 				}
@@ -167,7 +167,7 @@ var LuaView = (function(api) {
 		html += '</div>'; // codelist
 
 		html += footer();
-		
+
 		header();
 
 		api.setCpanelContent( html );
@@ -190,7 +190,7 @@ var LuaView = (function(api) {
 			jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
 		}
 	}
-	
+
 	function doStartupLua() {
 		initModule();
 
@@ -198,7 +198,7 @@ var LuaView = (function(api) {
 		html += '</div>'; // startup
 
 		html += footer();
-		
+
 		header();
 
 		api.setCpanelContent( html );
