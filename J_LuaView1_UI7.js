@@ -205,11 +205,24 @@ var LuaView = (function(api) {
 			jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
 		}
 	}
+    
+    function doStartupLua() {
+        var html;
+        
+        header();
+        
+        html = '<p>Startup Lua now appears on the scene Lua page. This stub will go away when the entire plugin is updated at the next revision.</p>';
+        html += footer();
+		api.setCpanelContent( html );
+        
+    }
+    
 
 	myModule = {
 		initModule: initModule,
 		onBeforeCpanelClose: onBeforeCpanelClose,
-		doSceneLua: doSceneLua
+		doSceneLua: doSceneLua,
+        doStartupLua: doStartupLua
 	};
 	return myModule;
 })(api);
