@@ -38,6 +38,8 @@ var LuaView = (function(api) {
 	function header() {
 		var html = "";
 
+        jQuery('head').append( '<meta charset="utf-8">' );
+        
 		html = '<style>';
 		html += 'input.narrow { max-width: 8em; }';
 		html += 'textarea.luacode { font-family: monospace; resize: vertical; }';
@@ -74,7 +76,9 @@ var LuaView = (function(api) {
 		var f = jQuery( ev.currentTarget );
 		f.addClass("modified");
 		var lua = f.val() || "";
+        lua = lua.replace( /\r\n/g, "\n" );
 		lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
+        lua = unescape( encodeURIComponent( lua ) ); // Fanciness to keep UTF-8 chars well
 		var scene = f.closest('div.row').attr( 'id' );
 		D("Changed " + scene);
 		if ( scene == "__startup" ) {
@@ -82,6 +86,8 @@ var LuaView = (function(api) {
 			jQuery.ajax({
 				url: url,
 				method: "POST",
+                scriptCharset: "utf-8",
+                contentType: "application/x-www-form-urlencoded; charset=utf-8",
 				data: { id: "lr_LuaView", action: "saveStartupLua", lua: lua },
 				dataType: "text",
 				timeout: 5000
@@ -134,6 +140,8 @@ var LuaView = (function(api) {
 				jQuery.ajax({
 					url: url,
 					method: "POST",
+                    scriptCharset: "utf-8",
+                    contentType: "application/x-www-form-urlencoded; charset=utf-8",
 					data: { id: "scene", action: "create", json: ux },
 					dataType: "text",
 					timeout: 5000
@@ -196,11 +204,12 @@ var LuaView = (function(api) {
 			el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
             jQuery('div.scenename', el).text( scenes[i].name + ' (' + scenes[i].id + ')' );
 			el.append('<div class="col-xs-12 col-md-9 col-lg-10"><textarea class="luacode form-control" rows="8"></textarea></div>');
+            var lua = scenes[i].lua || "";
 			if ( ( scenes[i].encoded_lua || 0 ) != 0 ) {
-				jQuery('textarea', el).val( atob(scenes[i].lua) || "??" );
-			} else {
-				jQuery('textarea', el).val( scenes[i].lua || "" );
+				lua = atob( lua );
 			}
+            lua = decodeURIComponent( escape( lua ) ); // Fanciness to keep UTF-8 chars well
+            jQuery('textarea', el).val( lua );
 			list.append(el);
 			jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
 		}
