@@ -241,7 +241,8 @@ var LuaViewALTUI = (function(api) {
         for (var i=0; i<scenes.length; ++i) {
             el = jQuery('<div class="coderow row"></div>');
             el.attr('id', scenes[i].id);
-            el.append('<div class="col-xs-12 col-md-3 col-lg-2">' + scenes[i].name + ' (#' + scenes[i].id + ')</div>');
+            el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
+            jQuery( 'div.scenename', el ).text( scenes[i].name + ' (' + scenes[i].id + ')' );
             el.append('<div class="ace-field col-xs-12 col-md-9 col-lg-10"></div>');
             jQuery('div.ace-field', el).attr('id', 'editor' + scenes[i].id);
             list.append( el );
@@ -277,7 +278,7 @@ var LuaViewALTUI = (function(api) {
 	myModule = {
 		initModule: initModule,
 		onBeforeCpanelClose: onBeforeCpanelClose,
-		doSceneLua: doSceneLua,
+		doSceneLua: doSceneLua
 	};
 	return myModule;
 })(api);

@@ -48,22 +48,12 @@
 			"ScriptName": "J_LuaView1_UI7.js",
 			"Function": "LuaView.doSceneLua"
 		},
-		{
-			"Label": {
-				"lang_tag": "tb_luaview_startup",
-				"text": "Startup Lua"
-			},
-			"Position": 2,
-			"TabType": "javascript",
-			"TopNavigationTab": 1,
-			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doStartupLua"
-		}, {
+        {
 			"Label": {
 				"lang_tag": "ui7_advanced",
 				"text": "Advanced"
 			},
-			"Position": 3,
+			"Position": 2,
 			"TabType": "javascript",
 			"ScriptName": "shared.js",
 			"Function": "advanced_device"

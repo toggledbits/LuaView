@@ -175,12 +175,27 @@ var LuaView = (function(api) {
 		var ud = api.getUserData();
 		var scenes = api.cloneObject( ud.scenes );
 		scenes.sort( function( a, b ) { return a.name < b.name ? -1 : 1; } );
+        
 		var list = jQuery("div#codelist");
+        
+		var el = jQuery('<div class="coderow row"></div>');
+		el.attr('id', '__startup');
+		el.append('<div class="col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
+        el.append('<div class="col-xs-12 col-md-9 col-lg-10"><textarea class="luacode form-control" rows="8"></textarea></div>');
+		if ( ( ud.encoded_lua || 0 ) != 0 && ud.StartupCode ) {
+			jQuery('textarea', el).val( atob( ud.StartupCode ) || "??" );
+		} else {
+			jQuery('textarea', el).val( ud.StartupCode || "" );
+		}
+		list.append(el);
+		jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
+        
 		for (var i=0; i<scenes.length; ++i) {
-			var el = jQuery('<div class="row"></div>');
+			el = jQuery('<div class="coderow row"></div>');
 			el.attr('id', scenes[i].id);
-			el.append('<div class="col-xs-12 col-md-4 col-lg-2">' + scenes[i].name + ' (#' + scenes[i].id + ')</div>');
-			el.append('<div class="col-xs-12 col-md-8 col-lg-10"><textarea class="luacode form-control" rows="8"></textarea></div>');
+			el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
+            jQuery('div.scenename', el).text( scenes[i].name + ' (' + scenes[i].id + ')' );
+			el.append('<div class="col-xs-12 col-md-9 col-lg-10"><textarea class="luacode form-control" rows="8"></textarea></div>');
 			if ( ( scenes[i].encoded_lua || 0 ) != 0 ) {
 				jQuery('textarea', el).val( atob(scenes[i].lua) || "??" );
 			} else {
@@ -191,37 +206,10 @@ var LuaView = (function(api) {
 		}
 	}
 
-	function doStartupLua() {
-		initModule();
-
-		var html = '<div id="startup">';
-		html += '</div>'; // startup
-
-		html += footer();
-
-		header();
-
-		api.setCpanelContent( html );
-
-		var ud = api.getUserData();
-		var list = jQuery("div#startup");
-		var el = jQuery('<div class="row"></div>');
-		el.attr('id', '__startup');
-		el.append('<div class="col-xs-12 col-lg-12"><textarea class="luacode form-control" rows="8"></textarea></div>');
-		if ( ( ud.encoded_lua || 0 ) != 0 && ud.StartupCode ) {
-			jQuery('textarea', el).val( atob( ud.StartupCode ) || "??" );
-		} else {
-			jQuery('textarea', el).val( ud.StartupCode || "" );
-		}
-		list.append(el);
-		jQuery( 'textarea', el ).on( 'change.luaview', handleTextChange );
-	}
-
 	myModule = {
 		initModule: initModule,
 		onBeforeCpanelClose: onBeforeCpanelClose,
-		doSceneLua: doSceneLua,
-		doStartupLua: doStartupLua,
+		doSceneLua: doSceneLua
 	};
 	return myModule;
 })(api);
