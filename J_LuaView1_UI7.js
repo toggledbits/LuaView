@@ -22,7 +22,7 @@ var LuaView = (function(api, $) {
     function D(m) {
         console.log("J_LuaView1_UI7.js: " + m);
     }
-
+    
     function initModule() {
         D("jQuery version is " + String( jQuery.fn.jquery ) );
         var ud = api.getUserData();
@@ -313,7 +313,7 @@ var LuaView = (function(api, $) {
         jQuery('select', el).on( 'change', handleSortChange );
         list.append(el);
 
-        var code = ( ud.encoded_lua ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
+        var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
         el = jQuery('<div class="coderow row"></div>');
         el.attr('id', '__startup');
         el.append('<div class="col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
@@ -349,7 +349,7 @@ var LuaView = (function(api, $) {
             el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
             jQuery('div.scenename', el).text( (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')' );
             el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
-            code = ( scenes[i].encoded_lua ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
+            code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
             if ( typeof(MultiBox) == "undefined" || typeof(ace) == "undefined" ) {
                 doTextArea( jQuery("div.editor", el), code );
             } else {
@@ -381,11 +381,17 @@ var LuaView = (function(api, $) {
 
         updateDisplay();
     }
+    
+    function doDonate()
+    {
+        api.setCpanelContent('<p>If you find LuaView useful, please consider <a href="https://www.toggledbits.com/donate" target="_blank">making a small donation</a> toward its ongoing support! I am grateful for any support you give!</p>');
+    }
 
     myModule = {
         initModule: initModule,
         onBeforeCpanelClose: onBeforeCpanelClose,
-        doLua: doLua
+        doLua: doLua,
+        doDonate: doDonate
     };
     return myModule;
 })(api, $);
