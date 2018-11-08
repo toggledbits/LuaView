@@ -44,8 +44,8 @@
 		},
 		{
 			"Label": {
-				"lang_tag": "tb_luaview_scenes",
-				"text": "Scene Lua"
+				"lang_tag": "tb_luaview_lua",
+				"text": "Lua"
 			},
 			"Position": 1,
 			"TabType": "javascript",
@@ -53,12 +53,23 @@
 			"ScriptName": "J_LuaView1_UI7.js",
 			"Function": "LuaView.doLua"
 		},
+		{
+			"Label": {
+				"lang_tag": "tb_luaview_donate",
+				"text": "Donate"
+			},
+			"Position": 2,
+			"TabType": "javascript",
+			"TopNavigationTab": 1,
+			"ScriptName": "J_LuaView1_UI7.js",
+			"Function": "LuaView.doDonate"
+		},
         {
 			"Label": {
 				"lang_tag": "ui7_advanced",
 				"text": "Advanced"
 			},
-			"Position": 2,
+			"Position": 3,
 			"TabType": "javascript",
 			"ScriptName": "shared.js",
 			"Function": "advanced_device"
