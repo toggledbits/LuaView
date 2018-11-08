@@ -306,7 +306,7 @@ var LuaView = (function(api, $) {
             sortopt = [ "name", "asc" ];
         }
 
-        var el = jQuery('<div class="coderow row"></div>');
+        var el = jQuery('<div class="sortrow row form-inline"></div>');
         el.append('<div class="col-xs-12">Sort by: <select id="sortby" class="form-control form-control-sm"><option value="name">Name</option><option value="id">ID</option></select><select id="sortasc" class="form-control form-control-sm"><option value="asc">ascending</option><option value="desc">descending</option></select></div>');
         jQuery('select#sortby', el).val( sortopt[0] );
         jQuery('select#sortasc', el).val( sortopt[1] );
