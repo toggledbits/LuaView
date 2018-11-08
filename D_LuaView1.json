@@ -1,5 +1,9 @@
 {
 	"default_icon": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+    "state_icons": [{
+        "img": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+        "conditions": []
+    }],
 	"x": 2,
 	"y": 4,
 	"inScene": 1,
@@ -9,6 +13,7 @@
 				"text": "Control"
 			},
 			"Position": 0,
+			"TopNavigationTab": 1,
 			"TabType": "flash",
 			"ControlGroup": [{
 				"id": 1,
@@ -32,33 +37,34 @@
 					},
 					"Label": {
 						"lang_tag": "tb_luaview_about",
-						"text": "LuaView ver 1.2 Patrick H. Rigney (rigpapa). Support and discussion in the <a href=\"http://forum.micasaverde.com/index.php/topic,103404.0.html\" target=\"_blank\">forum thread</a>; also see the <a href=\"http://www.toggledbits.com/luaview\" target=\"_blank\">documentation</a>."
+						"text": "LuaView ver 1.3 Patrick H. Rigney (rigpapa). Support and discussion in the <a href=\"http://forum.micasaverde.com/index.php/topic,103404.0.html\" target=\"_blank\">forum thread</a>; also see the <a href=\"http://www.toggledbits.com/luaview\" target=\"_blank\">documentation</a>."
 					}
 				}
 			]
 		},
 		{
 			"Label": {
-				"lang_tag": "tb_luaview_scenes",
-				"text": "Scene Lua"
+				"lang_tag": "tb_luaview_lua",
+				"text": "Lua"
 			},
 			"Position": 1,
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
 			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doSceneLua"
+			"Function": "LuaView.doLua"
 		},
 		{
 			"Label": {
-				"lang_tag": "tb_luaview_startup",
-				"text": "Startup Lua"
+				"lang_tag": "tb_luaview_donate",
+				"text": "Donate"
 			},
 			"Position": 2,
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
 			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doStartupLua"
-		}, {
+			"Function": "LuaView.doDonate"
+		},
+        {
 			"Label": {
 				"lang_tag": "ui7_advanced",
 				"text": "Advanced"

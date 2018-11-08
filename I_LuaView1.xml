@@ -6,25 +6,21 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.2")
+            luup.log("LuaView 1.3 starting.")
             isOpenLuup = false
-            isALTUI = false
             for _,v in pairs( luup.devices ) do
                 if v.device_type == "openLuup" then
                     isOpenLuup = true
+                    break
                 end
-                if v.device_type == "urn:schemas-upnp-org:device:altui:1" then
-                    isALTUI = true
-                end
-                if isALTUI and isOpenLuup then break end -- work is done
             end
-            luup.log("LuaView init, openLuup=" .. tostring(isOpenLuup) .. ", ALTUI=" .. tostring(isALTUI))
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
-            if isALTUI and luup.attr_get( "device_json", dev ) ~= "D_LuaView1_ALTUI.json" then
-                luup.attr_set( "device_json", "D_LuaView1_ALTUI.json", dev )
+            if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
+                luup.log("LuaView resetting static JSON file, Luup reload necessary...")
+                luup.attr_set( "device_json", "D_LuaView1.json", dev )
                 luup.reload()
             end
-            if isALTUI and luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", dev ) == nil then
+            if luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", dev ) == nil then
                 luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", "", dev )
             end
             luup.register_handler("LuaViewRequestHandler", "LuaView")

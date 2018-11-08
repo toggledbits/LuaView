@@ -8,9 +8,9 @@ In theory, this could be a Lua-less plugin itself--the entire implementation in 
 
 ## Troubleshooting and Known Issues ##
 
-Some older versions of firmware/UI cause unannounced Luup reloads or are slow to load `userdata`, and this can cause JavaScript runtime errors when you try to enter LuaView. Don't sweat it. Just go back to the dashboard, give the system a few seconds to settle down, then go back into LuaView and everything should be fine. 
+Some older versions of Vera firmware/UI cause unannounced Luup reloads or are slow to load `userdata`, and this can cause JavaScript runtime errors when you try to enter LuaView. Don't sweat it. Just go back to the dashboard, give the system a few seconds to settle down, then go back into LuaView and everything should be fine. 
 
-LuaView is very dependent on two-way communication with the Vera when editing scenes, so if the Vera isn't responding at the moment LuaView attempts to load or save a scene, you'll get a message to that effect. Just make a nonsense change (like add trailing spaces, which LuaView then removes anyway) and tab out of the field to trigger another save attempt.
+LuaView is very dependent on two-way communication with the Vera or openLuup host when editing scenes, so if the host isn't responding at the moment LuaView attempts to load or save a scene, you'll get a message to that effect. Just make a nonsense change (like add trailing spaces, which LuaView then removes anyway) and click out of the field to trigger another save attempt.
 
 LuaView doesn't check syntax. Be very careful editing Startup Lua in particular. There be monsters there.
 
