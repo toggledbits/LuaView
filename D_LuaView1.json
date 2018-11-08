@@ -1,5 +1,9 @@
 {
 	"default_icon": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+    "state_icons": [{
+        "img": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+        "conditions": []
+    }],
 	"x": 2,
 	"y": 4,
 	"inScene": 1,
@@ -9,6 +13,7 @@
 				"text": "Control"
 			},
 			"Position": 0,
+			"TopNavigationTab": 1,
 			"TabType": "flash",
 			"ControlGroup": [{
 				"id": 1,
@@ -46,7 +51,7 @@
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
 			"ScriptName": "J_LuaView1_UI7.js",
-			"Function": "LuaView.doSceneLua"
+			"Function": "LuaView.doLua"
 		},
         {
 			"Label": {

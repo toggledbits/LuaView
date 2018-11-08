@@ -20,11 +20,11 @@
             end
             luup.log("LuaView init, openLuup=" .. tostring(isOpenLuup) .. ", ALTUI=" .. tostring(isALTUI))
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
-            if isALTUI and luup.attr_get( "device_json", dev ) ~= "D_LuaView1_ALTUI.json" then
-                luup.attr_set( "device_json", "D_LuaView1_ALTUI.json", dev )
+            if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
+                luup.attr_set( "device_json", "D_LuaView1.json", dev )
                 luup.reload()
             end
-            if isALTUI and luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", dev ) == nil then
+            if luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", dev ) == nil then
                 luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "AceOptions", "", dev )
             end
             luup.register_handler("LuaViewRequestHandler", "LuaView")
