@@ -39,6 +39,11 @@ var LuaView = (function(api, $) {
         var html = "";
 
         jQuery('head').append( '<meta charset="utf-8">' );
+        
+        if ( ! window.ace ) {
+            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>' );
+            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
+        }
 
         html = '<style>';
         html += 'input.narrow { max-width: 8em; }';
@@ -318,7 +323,7 @@ var LuaView = (function(api, $) {
         el.attr('id', '__startup');
         el.append('<div class="col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
         el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
-        if ( typeof(MultiBox) == "undefined" || typeof(ace) == "undefined" ) {
+        if ( ! window.ace ) {
             doTextArea( jQuery("div.editor", el), code );
         } else {
             doEditor( jQuery("div.editor", el), code );
@@ -350,7 +355,7 @@ var LuaView = (function(api, $) {
             jQuery('div.scenename', el).text( (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')' );
             el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
             code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
-            if ( typeof(MultiBox) == "undefined" || typeof(ace) == "undefined" ) {
+            if ( ! window.ace ) {
                 doTextArea( jQuery("div.editor", el), code );
             } else {
                 doEditor( jQuery("div.editor", el), code );
