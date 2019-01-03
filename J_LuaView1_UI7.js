@@ -62,7 +62,7 @@ var LuaView = (function(api, $) {
         var html = '';
         html += '<div class="clearfix">';
         html += '<div id="tbbegging"><em>Find LuaView useful?</em> Please consider a small one-time donation to support this and my other plugins on <a href="https://www.toggledbits.com/donate" target="_blank">my web site</a>. I am grateful for any support you choose to give!</div>';
-        html += '<div id="tbcopyright">LuaView ver 1.3 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
+        html += '<div id="tbcopyright">LuaView ver 1.4 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
             ' Please use the ' +
             ' <a href="http://forum.micasaverde.com/index.php/topic,103404.0.html" target="_blank">forum thread</a> for support.</div>';
         return html;
@@ -371,20 +371,26 @@ var LuaView = (function(api, $) {
         api.setDeviceStatePersistent( api.getCpanelDeviceId(), serviceId, "Sort", sort );
         updateDisplay( sort );
     }
+    
+    function waitForAce( since ) { 
+        if ( window.ace || ( Date.now() - since ) >= 5000 ) {
+            updateDisplay();
+            return;
+        }
+        setTimeout( function() { waitForAce( since ); }, 500 );
+    }
 
     function doLua()
     {
         initModule();
         
-        var html = '<div id="codelist"></div>';
-
-        html += footer();
-
         header();
 
+        var html = '<div id="codelist">Loading... please wait...</div>';
+        html += footer();
         api.setCpanelContent( html );
 
-        updateDisplay();
+        waitForAce( Date.now() );
     }
     
     function doDonate()
