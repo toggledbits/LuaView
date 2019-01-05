@@ -40,9 +40,11 @@ var LuaView = (function(api, $) {
 
         jQuery('head').append( '<meta charset="utf-8">' );
         
-        if ( ! window.ace ) {
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1"
+        if ( "0" !== s && ! window.ace ) {
             jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>' );
-            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
+            // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
+            // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/theme-xcode.js"></script>' );
         }
 
         html = '<style>';
@@ -373,7 +375,8 @@ var LuaView = (function(api, $) {
     }
     
     function waitForAce( since ) { 
-        if ( window.ace || ( Date.now() - since ) >= 5000 ) {
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1"
+        if ( "0" == s || window.ace || ( Date.now() - since ) >= 5000 ) {
             updateDisplay();
             return;
         }
