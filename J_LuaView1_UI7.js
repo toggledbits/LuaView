@@ -42,7 +42,9 @@ var LuaView = (function(api, $) {
         
         var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1"
         if ( "0" !== s && ! window.ace ) {
-            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>' );
+            s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "ACEURL" ) || ""
+            if ( "" === s ) s = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js";
+            jQuery( "head" ).append( '<script src="' + s + '"></script>' );
             // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
             // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/theme-xcode.js"></script>' );
         }
