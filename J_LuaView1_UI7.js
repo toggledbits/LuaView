@@ -40,9 +40,9 @@ var LuaView = (function(api, $) {
 
         jQuery('head').append( '<meta charset="utf-8">' );
         
-        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1"
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1";
         if ( "0" !== s && ! window.ace ) {
-            s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "ACEURL" ) || ""
+            s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "ACEURL" ) || "";
             if ( "" === s ) s = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js";
             jQuery( "head" ).append( '<script src="' + s + '"></script>' );
             // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
@@ -66,7 +66,7 @@ var LuaView = (function(api, $) {
         var html = '';
         html += '<div class="clearfix">';
         html += '<div id="tbbegging"><em>Find LuaView useful?</em> Please consider a small one-time donation to support this and my other plugins on <a href="https://www.toggledbits.com/donate" target="_blank">my web site</a>. I am grateful for any support you choose to give!</div>';
-        html += '<div id="tbcopyright">LuaView ver 1.5stable-190106 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
+        html += '<div id="tbcopyright">LuaView ver 1.5stable-19014 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
             ' Please use the ' +
             ' <a href="http://forum.micasaverde.com/index.php/topic,103404.0.html" target="_blank">forum thread</a> for support.</div>';
         return html;
@@ -113,16 +113,6 @@ var LuaView = (function(api, $) {
                 alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
             });
         } else {
-            if ( lua !== "" ) {
-                var lines = lua.split( /(\r|\n)+/ );
-                /* Remove trailing comments. Always leave one line, so test works if Lua is all comments (still needs return) */
-                while ( lines.length > 1 && ( lines[lines.length-1].match(/^\s*--/) || lines[lines.length-1].match(/^\s*$/) ) ) {
-                    lines.pop();
-                }
-                if ( lines.length > 0 && ! lines[lines.length-1].match(/^\s*return/) ) {
-                    alert( 'Your scene Lua may not return "true" or "false", which Luup expects. This can cause unpredictable scene behavior. If your returns are buried in conditionals or loops, I can\'t see them; just make sure your code always exits with a return value.' );
-                }
-            }
             D("Loading scene data from " + url);
             scene = parseInt( scene );
             /* Query the scene as it currently is. */
@@ -217,16 +207,6 @@ var LuaView = (function(api, $) {
 				alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
 			});
 		} else {
-			if ( lua !== "" ) {
-				var lines = lua.split( /(\r|\n)+/ );
-				/* Remove trailing comments. Always leave one line, so test works if Lua is all comments (still needs return) */
-				while ( lines.length > 1 && ( lines[lines.length-1].match(/^\s*--/) || lines[lines.length-1].match(/^\s*$/) ) ) {
-					lines.pop();
-				}
-				if ( lines.length > 0 && ! lines[lines.length-1].match(/^\s*return/) ) {
-					alert( 'Your scene Lua may not return "true" or "false", which Luup expects. This can cause unpredictable scene behavior. If your returns are buried in conditionals or loops, I can\'t see them; just make sure your code always exits with a return value.' );
-				}
-			}
 			D("Loading scene data from " + url);
 			scene = parseInt( scene );
 			/* Query the scene as it currently is. */
@@ -377,7 +357,7 @@ var LuaView = (function(api, $) {
     }
     
     function waitForAce( since ) { 
-        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1"
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1";
         if ( "0" == s || window.ace || ( Date.now() - since ) >= 5000 ) {
             updateDisplay();
             return;

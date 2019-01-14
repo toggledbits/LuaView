@@ -6,7 +6,7 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.4 starting.")
+            luup.log("LuaView 1.5stable-19014 starting.")
             isOpenLuup = false
             for _,v in pairs( luup.devices ) do
                 if v.device_type == "openLuup" then
