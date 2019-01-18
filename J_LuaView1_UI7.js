@@ -52,6 +52,7 @@ var LuaView = (function(api, $) {
         html = '<style>';
         html += 'input.narrow { max-width: 8em; }';
 		html += 'div.coderow { padding: 12px 0px 12px 0px; border-top: 1px dotted black; }';
+        html += 'div.tberrmsg { color: red; padding: 4px 4px 4px 4px; border: 2px solid red; }';
         html += 'textarea.luacode { font-family: monospace; resize: vertical; }';
         html += 'textarea.modified { background-color: #ffcccc; }';
         html += 'div#tbcopyright { display: block; margin: 12px 0 12px; 0; }';
@@ -77,15 +78,43 @@ var LuaView = (function(api, $) {
         D( 'onBeforeCpanelClose args: ' + JSON.stringify(args) );
     }
 
+    /* Swiped from Reactor, this function checks the Lua fragment */
+    function testLua( lua, row ) {
+        jQuery( 'div.tberrmsg', row ).remove();
+        $.ajax({
+            url: api.getDataRequestURL(),
+            method: 'POST', /* data could be long */
+            data: {
+                id: "lr_LuaView",
+                action: "testlua",
+                lua: lua
+            },
+            cache: false,
+            dataType: 'json',
+            timeout: 5000
+        }).done( function( data, statusText, jqXHR ) {
+            if ( data.status ) {
+                /* Good Lua */
+                return;
+            } else if ( data.status === false ) { /* specific false, not undefined */
+                jQuery( 'div.editor', row ).prepend( jQuery( '<div class="tberrmsg"/>' ).text( data.message || "Error in Lua" ) );
+            }
+        }).fail( function( stat ) {
+            console.log("Failed to check Lua: " + stat);
+        });
+    }
+
     function handleTextAreaChange( ev ) {
         var url = api.getDataRequestURL();
         var f = jQuery( ev.currentTarget );
         f.addClass("modified");
         var lua = f.val() || "";
-        lua = lua.replace( /\r\n/g, "\n" );
-        lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
+        lua = lua.replace( /\r\n/gm, "\n" ).replace( /\r/gm, "\n" );
+        lua = lua.replace( /[\n\s]+$/m, "" ); // rtrim
         lua = unescape( encodeURIComponent( lua ) ); // Fanciness to keep UTF-8 chars well
-        var scene = f.closest('div.row').attr( 'id' );
+        var row = f.closest( 'div.row' );
+        testLua( lua, row );
+        var scene = row.attr( 'id' );
         D("Changed " + scene);
         if ( scene == "__startup" ) {
             D("Posting startup lua change to to " + url);
@@ -179,7 +208,9 @@ var LuaView = (function(api, $) {
 		var f = jQuery( ev.currentTarget ).closest( 'div.row' );
 		f.addClass("modified");
 		var lua = session.getValue();
-		lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
+        lua = lua.replace( /\r\n/gm, "\n" ).replace( /\r/gm, "\n" );
+		lua = lua.replace( /[\n\s]+$/m, "" ); // rtrim
+        testLua( lua, f );
 		var scene = f.attr( 'id' );
 		D("Changed " + scene);
 		if ( scene == "__startup" ) {
@@ -303,14 +334,15 @@ var LuaView = (function(api, $) {
         list.append(el);
 
         var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
-        el = jQuery('<div class="coderow row"></div>');
+        el = jQuery('<div class="coderow row" />');
         el.attr('id', '__startup');
-        el.append('<div class="col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
-        el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
+        el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
+        el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10" />');
         if ( ! window.ace ) {
             doTextArea( jQuery("div.editor", el), code );
         } else {
-            doEditor( jQuery("div.editor", el), code );
+            jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+            doEditor( jQuery("div.luacode", el), code );
         }
         list.append(el);
 
@@ -333,16 +365,24 @@ var LuaView = (function(api, $) {
             } 
         );
         for (var i=0; i<scenes.length; ++i) {
-            el = jQuery('<div class="coderow row"></div>');
+            if ( undefined !== scenes[i].notification_only ) {
+                continue;
+            }
+            el = jQuery('<div class="coderow row" />');
             el.attr('id', scenes[i].id);
-            el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
-            jQuery('div.scenename', el).text( (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')' );
-            el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
+            el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2" />');
+            var sn = (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')';
+            if ( scenes[i].hidden ) {
+                sn += " (hidden)";
+            }
+            jQuery('div.scenename', el).text( sn );
+            el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10" />');
             code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
             if ( ! window.ace ) {
                 doTextArea( jQuery("div.editor", el), code );
             } else {
-                doEditor( jQuery("div.editor", el), code );
+                jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+                doEditor( jQuery("div.luacode", el), code );
             }
             list.append(el);
         }
