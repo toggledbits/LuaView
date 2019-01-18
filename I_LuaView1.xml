@@ -41,6 +41,13 @@
                 end
                 luup.log("LuaView: updated startup Lua")
                 return "OK", "text/plain"
+             elseif lul_parameters.action == "testlua" then
+                local _,err = loadstring( lul_parameters.lua or "" )
+                local json = require "dkjson"
+                if err then
+                    return json.encode{ status=false, message=err }, "application/json"
+                end
+                return json.encode{ status=true, message="Lua OK" }, "application/json"
              end
              return "Invalid request", "text/plain"
         end
