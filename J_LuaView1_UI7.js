@@ -67,7 +67,7 @@ var LuaView = (function(api, $) {
         var html = '';
         html += '<div class="clearfix">';
         html += '<div id="tbbegging"><em>Find LuaView useful?</em> Please consider a small one-time donation to support this and my other plugins on <a href="https://www.toggledbits.com/donate" target="_blank">my web site</a>. I am grateful for any support you choose to give!</div>';
-        html += '<div id="tbcopyright">LuaView ver 1.5develop <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
+        html += '<div id="tbcopyright">LuaView ver 1.5 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
             ' Please use the ' +
             ' <a href="http://forum.micasaverde.com/index.php/topic,103404.0.html" target="_blank">forum thread</a> for support.</div>';
         return html;
