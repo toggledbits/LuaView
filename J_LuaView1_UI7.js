@@ -40,14 +40,19 @@ var LuaView = (function(api, $) {
 
         jQuery('head').append( '<meta charset="utf-8">' );
         
-        if ( ! window.ace ) {
-            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>' );
-            jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1";
+        if ( "0" !== s && ! window.ace ) {
+            s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "ACEURL" ) || "";
+            if ( "" === s ) s = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js";
+            jQuery( "head" ).append( '<script src="' + s + '"></script>' );
+            // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
+            // jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/theme-xcode.js"></script>' );
         }
 
         html = '<style>';
         html += 'input.narrow { max-width: 8em; }';
 		html += 'div.coderow { padding: 12px 0px 12px 0px; border-top: 1px dotted black; }';
+        html += 'div.tberrmsg { color: red; padding: 4px 4px 4px 4px; border: 2px solid red; }';
         html += 'textarea.luacode { font-family: monospace; resize: vertical; }';
         html += 'textarea.modified { background-color: #ffcccc; }';
         html += 'div#tbcopyright { display: block; margin: 12px 0 12px; 0; }';
@@ -62,7 +67,7 @@ var LuaView = (function(api, $) {
         var html = '';
         html += '<div class="clearfix">';
         html += '<div id="tbbegging"><em>Find LuaView useful?</em> Please consider a small one-time donation to support this and my other plugins on <a href="https://www.toggledbits.com/donate" target="_blank">my web site</a>. I am grateful for any support you choose to give!</div>';
-        html += '<div id="tbcopyright">LuaView ver 1.4 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
+        html += '<div id="tbcopyright">LuaView ver 1.5 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney (rigpapa)</a>' +
             ' Please use the ' +
             ' <a href="http://forum.micasaverde.com/index.php/topic,103404.0.html" target="_blank">forum thread</a> for support.</div>';
         return html;
@@ -73,15 +78,43 @@ var LuaView = (function(api, $) {
         D( 'onBeforeCpanelClose args: ' + JSON.stringify(args) );
     }
 
+    /* Swiped from Reactor, this function checks the Lua fragment */
+    function testLua( lua, row ) {
+        jQuery( 'div.tberrmsg', row ).remove();
+        $.ajax({
+            url: api.getDataRequestURL(),
+            method: 'POST', /* data could be long */
+            data: {
+                id: "lr_LuaView",
+                action: "testlua",
+                lua: lua
+            },
+            cache: false,
+            dataType: 'json',
+            timeout: 5000
+        }).done( function( data, statusText, jqXHR ) {
+            if ( data.status ) {
+                /* Good Lua */
+                return;
+            } else if ( data.status === false ) { /* specific false, not undefined */
+                jQuery( 'div.editor', row ).prepend( jQuery( '<div class="tberrmsg"/>' ).text( data.message || "Error in Lua" ) );
+            }
+        }).fail( function( stat ) {
+            console.log("Failed to check Lua: " + stat);
+        });
+    }
+
     function handleTextAreaChange( ev ) {
         var url = api.getDataRequestURL();
         var f = jQuery( ev.currentTarget );
         f.addClass("modified");
         var lua = f.val() || "";
-        lua = lua.replace( /\r\n/g, "\n" );
-        lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
+        lua = lua.replace( /\r\n/gm, "\n" ).replace( /\r/gm, "\n" );
+        lua = lua.replace( /[\n\s]+$/m, "" ); // rtrim
         lua = unescape( encodeURIComponent( lua ) ); // Fanciness to keep UTF-8 chars well
-        var scene = f.closest('div.row').attr( 'id' );
+        var row = f.closest( 'div.row' );
+        testLua( lua, row );
+        var scene = row.attr( 'id' );
         D("Changed " + scene);
         if ( scene == "__startup" ) {
             D("Posting startup lua change to to " + url);
@@ -109,16 +142,6 @@ var LuaView = (function(api, $) {
                 alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
             });
         } else {
-            if ( lua !== "" ) {
-                var lines = lua.split( /(\r|\n)+/ );
-                /* Remove trailing comments. Always leave one line, so test works if Lua is all comments (still needs return) */
-                while ( lines.length > 1 && ( lines[lines.length-1].match(/^\s*--/) || lines[lines.length-1].match(/^\s*$/) ) ) {
-                    lines.pop();
-                }
-                if ( lines.length > 0 && ! lines[lines.length-1].match(/^\s*return/) ) {
-                    alert( 'Your scene Lua may not return "true" or "false", which Luup expects. This can cause unpredictable scene behavior. If your returns are buried in conditionals or loops, I can\'t see them; just make sure your code always exits with a return value.' );
-                }
-            }
             D("Loading scene data from " + url);
             scene = parseInt( scene );
             /* Query the scene as it currently is. */
@@ -185,7 +208,9 @@ var LuaView = (function(api, $) {
 		var f = jQuery( ev.currentTarget ).closest( 'div.row' );
 		f.addClass("modified");
 		var lua = session.getValue();
-		lua = lua.replace( /[\r\n\s]+$/m, "" ); // rtrim
+        lua = lua.replace( /\r\n/gm, "\n" ).replace( /\r/gm, "\n" );
+		lua = lua.replace( /[\n\s]+$/m, "" ); // rtrim
+        testLua( lua, f );
 		var scene = f.attr( 'id' );
 		D("Changed " + scene);
 		if ( scene == "__startup" ) {
@@ -213,16 +238,6 @@ var LuaView = (function(api, $) {
 				alert("Save failed! Vera may be busy/restarting. Wait a moment, and try again.");
 			});
 		} else {
-			if ( lua !== "" ) {
-				var lines = lua.split( /(\r|\n)+/ );
-				/* Remove trailing comments. Always leave one line, so test works if Lua is all comments (still needs return) */
-				while ( lines.length > 1 && ( lines[lines.length-1].match(/^\s*--/) || lines[lines.length-1].match(/^\s*$/) ) ) {
-					lines.pop();
-				}
-				if ( lines.length > 0 && ! lines[lines.length-1].match(/^\s*return/) ) {
-					alert( 'Your scene Lua may not return "true" or "false", which Luup expects. This can cause unpredictable scene behavior. If your returns are buried in conditionals or loops, I can\'t see them; just make sure your code always exits with a return value.' );
-				}
-			}
 			D("Loading scene data from " + url);
 			scene = parseInt( scene );
 			/* Query the scene as it currently is. */
@@ -319,14 +334,15 @@ var LuaView = (function(api, $) {
         list.append(el);
 
         var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
-        el = jQuery('<div class="coderow row"></div>');
+        el = jQuery('<div class="coderow row" />');
         el.attr('id', '__startup');
-        el.append('<div class="col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
-        el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
+        el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
+        el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10" />');
         if ( ! window.ace ) {
             doTextArea( jQuery("div.editor", el), code );
         } else {
-            doEditor( jQuery("div.editor", el), code );
+            jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+            doEditor( jQuery("div.luacode", el), code );
         }
         list.append(el);
 
@@ -349,16 +365,24 @@ var LuaView = (function(api, $) {
             } 
         );
         for (var i=0; i<scenes.length; ++i) {
-            el = jQuery('<div class="coderow row"></div>');
+            if ( undefined !== scenes[i].notification_only ) {
+                continue;
+            }
+            el = jQuery('<div class="coderow row" />');
             el.attr('id', scenes[i].id);
-            el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
-            jQuery('div.scenename', el).text( (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')' );
-            el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
+            el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2" />');
+            var sn = (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')';
+            if ( scenes[i].hidden ) {
+                sn += " (hidden)";
+            }
+            jQuery('div.scenename', el).text( sn );
+            el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10" />');
             code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
             if ( ! window.ace ) {
                 doTextArea( jQuery("div.editor", el), code );
             } else {
-                doEditor( jQuery("div.editor", el), code );
+                jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+                doEditor( jQuery("div.luacode", el), code );
             }
             list.append(el);
         }
@@ -373,7 +397,8 @@ var LuaView = (function(api, $) {
     }
     
     function waitForAce( since ) { 
-        if ( window.ace || ( Date.now() - since ) >= 5000 ) {
+        var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1";
+        if ( "0" == s || window.ace || ( Date.now() - since ) >= 5000 ) {
             updateDisplay();
             return;
         }
