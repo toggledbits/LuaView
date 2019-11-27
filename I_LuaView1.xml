@@ -6,7 +6,7 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.5 starting.")
+            luup.log("LuaView 1.6develop-19331 starting.")
             isOpenLuup = false
             for _,v in pairs( luup.devices ) do
                 if v.device_type == "openLuup" then
@@ -48,8 +48,13 @@
                     return json.encode{ status=false, message=err }, "application/json"
                 end
                 return json.encode{ status=true, message="Lua OK" }, "application/json"
+             elseif lul_parameters.action == "alive" then
+                local json = require "dkjson"
+                return json.encode{ status=true }, 'application/json'
+             elseif lul_parameters.action == "blank" then
+                return '&lt;html&gt;&lt;body bgcolor="white"&gt;Please wait... collecting data&lt;/body&gt;&lt;/html&gt;', "text/html"
              end
-             return "Invalid request", "text/plain"
+             return "ERROR\nInvalid request", "text/plain"
         end
     </functions>
     <startup>startLuaView</startup>
