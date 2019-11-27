@@ -12,6 +12,8 @@ Some older versions of Vera firmware/UI cause unannounced Luup reloads or are sl
 
 LuaView is very dependent on two-way communication with the Vera or openLuup host when editing scenes, so if the host isn't responding at the moment LuaView attempts to load or save a scene, you'll get a message to that effect. Just make a nonsense change (like add trailing spaces, which LuaView then removes anyway) and click out of the field to trigger another save attempt.
 
-LuaView doesn't check syntax. Be very careful editing Startup Lua in particular. There be monsters there.
+Remember that if your return boolean *false* from scene Lua, no other actions in the scene will run (this is a feature).
 
-Remember that *all* scene Lua must end with a `return` statement returning a boolean value (*true* or *false*). Even if you just add a comment as the entire Lua, you need a return statement, or your scenes may behave unpredictably. For clarity, returning *true* tells Luup to continue running the scene, and *false* tells Luup not to run the scene. Since the scene Lua runs before the scene's device actions, this effectively gives you a last chance to keep the scene from running if you need to (e.g. don't turn on lights at night). LuaView attempts to check for this, but it's a very basic test, and will issue a false positive (warning) if your return is invisible to it (e.g. buried in a conditional, loop, or other construction). As long as all exit paths for your code return a value, you're safe.
+If you are copy-pasting Lua from the forums or through other editors, the quotation marks in the code can get mangled from the "programmer's quotes" to "pretty quotes". This is particularly true on Macs, and using various editors on mobile devices. If your code won't pass/run and you can't figure out why, always check your quotes.
+
+Also, if you're snagging code from the forums, there's a widespread and ongoing error in many code fragments that has huge potential to cause you grief. Read about it here: https://community.getvera.com/t/the-allow-meme-in-scene-scripts-must-die/210048
