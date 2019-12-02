@@ -12,7 +12,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.6develop-19331";
+	var pluginVersion = "1.6";
 
 	var myModule = {};
 
