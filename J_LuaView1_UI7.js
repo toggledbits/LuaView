@@ -12,7 +12,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.6";
+	var pluginVersion = "1.7develop-20005";
 
 	var myModule = {};
 
@@ -414,7 +414,7 @@ var LuaView = (function(api, $) {
 			}, 5000 );
 		}, 2000 );
 	}
-	
+
 	function handleBackupClick( ev ) {
 		var txt = '';
 		txt += '-- INSTRUCTIONS: RIGHT-CLICK in this window and choose "Save as..." to save this display as a backup of your Lua.';
@@ -572,6 +572,90 @@ var LuaView = (function(api, $) {
 		waitForAce( Date.now() );
 	}
 
+	var logTask = false;
+	var chunkSize = 250;
+
+	function loadNextLogChunk( tries ) {
+		tries = tries || 1;
+		if ( tries > 10 ) return; /* give up */
+		var container = jQuery( 'div#tblogdata' );
+		var lastline = parseInt( container.data( 'lastline' ) || 0 );
+		if ( isNaN(lastline) ) lastline = 0;
+		jQuery.ajax( {
+			url: api.getDataRequestURL() +
+				"?id=lr_LuaView&action=log&first=" + String( lastline + 1 ) +
+				"&count=" + chunkSize,
+			dataType: "text"
+		}).done( function( data ) {
+			data = data.replace( /\r\n/g, "\n" ).replace( /\r/g, "\n" ).replace( /[\u2028\u2029]/g, "\n" );
+			data = data.replace( /&/, "&amp;" ).replace( /[<]/g, "&lt;" ).replace( /[>]/g, "&gt;" );
+			data = data.replace( /\x1b\[(\d+);1m(.*)\x1b\[0m/g, function( m, p1, p2 ) {
+				var colors = { '30':'white', '31':'red', '32':'green', '33':'#c90',
+						  '34':'blue', '35':'#f3f', '36':'#3ff', '37':'black' };
+				return '<span style="color: ' + colors[p1] + '">' + p2 + '</span>';
+			});
+			data = data.replace( /\x1b\[1m(.*)\x1b\[0m/g, '<strong>$1</strong>' );
+			data = data.replace( /\x1b\[4m(.*)\x1b\[0m/g, '<u>$1</u>' );
+			data = data.replace( /\x1b\[7m(.*)\x1b\[0m/g, '<span style="background-color: white; color: black;">$1</span>' );
+			/* Below skips tab, NL */
+			data = data.replace( /[\x00-\x08\x0b-\x1f\x7f]/g, function( c ) {
+				return '<span style="color: #999">&lt;0x' + c.charCodeAt(0).toString(16) + '&gt;</span>';
+			});
+			var nl = 0;
+			if ( data.match( /^[\n\s]*$/ ) ) {
+				console.log("Reached current EOF at " + lastline);
+				nl = 0;
+			} else {
+				data.replace( /\n/g, function( w ) {
+					nl = nl + 1;
+					return w;
+				});
+			}
+			console.log("Received line count: " + nl );
+			var ll = parseInt( container.data( 'lastline' ) || 0 );
+			if ( nl > 0 ) {
+				if ( ll === lastline ) {
+					var blk = jQuery( 'div#tblogdata pre' );
+					ll += nl;
+					container.data( 'lastline', ll ).attr( 'data-lastline', ll );
+					blk.append( data );
+				}
+			}
+			if ( !logTask ) {
+				logTask = window.setTimeout( function() {
+					logTask = false;
+					loadNextLogChunk( 0 );
+				}, nl == 0 ? 5000: 1000 );
+			}
+			$( "div.tbloadstatus", container ).text(
+				nl == 0 ? ( "End reached at " + ll + ", waiting for more..." ) : ( ll + " so far, more to go, requesting..." )
+			);
+		}).fail( function() {
+			console.log( "Request failed... retrying" );
+			$( "div.tbloadstatus", container ).text("Error... Luup may be reloading... retrying... " + String(tries));
+			if ( !logTask ) {
+				logTask = window.setTimeout( function () {
+					logTask = false;
+					loadNextLogChunk( tries+1 );
+				}, 10000 );
+			}
+		});
+	}
+
+	function doLog()
+	{
+		initModule();
+
+		header();
+
+		var html = '<div id="tblogdata"><div class="tbloadstatus">Loading... please wait...</div><pre/><div class="tbloadstatus"/></div>';
+		html += footer();
+		api.setCpanelContent( html );
+
+		jQuery( 'div#tblogdata' ).data( 'lastline', 0 ).attr( 'data-lastline', 0 );
+		loadNextLogChunk( 0 );
+	}
+
 	function doDonate()
 	{
 		api.setCpanelContent('<p>If you find LuaView useful, please consider <a href="https://www.toggledbits.com/donate" target="_blank">making a small donation</a> toward its ongoing support! I am grateful for any support you give!</p>');
@@ -580,7 +664,8 @@ var LuaView = (function(api, $) {
 	myModule = {
 		initModule: initModule,
 		onBeforeCpanelClose: onBeforeCpanelClose,
-		doLua: doLua,
+		doLua: function() { try { doLua(); } catch (ex) { console.log(ex); alert(ex); } },
+		doLog: function() { try { doLog(); } catch (ex) { console.log(ex); alert(ex); } },
 		doDonate: doDonate
 	};
 	return myModule;

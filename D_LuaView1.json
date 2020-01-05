@@ -1,9 +1,9 @@
 {
 	"default_icon": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
-    "state_icons": [{
-        "img": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
-        "conditions": []
-    }],
+	"state_icons": [{
+		"img": "https://www.toggledbits.com/assets/luaview/luaview-icon.png",
+		"conditions": []
+	}],
 	"x": 2,
 	"y": 4,
 	"inScene": 1,
@@ -37,7 +37,7 @@
 					},
 					"Label": {
 						"lang_tag": "tb_luaview_about",
-						"text": "LuaView ver 1.6 Patrick H. Rigney (rigpapa). Support and discussion in the <a href=\"http://forum.micasaverde.com/index.php/topic,103404.0.html\" target=\"_blank\">forum thread</a>; also see the <a href=\"http://www.toggledbits.com/luaview\" target=\"_blank\">documentation</a>. <b>All of my plugins are community-supported; please <a href=\"https://www.toggledbits.com/donate\">donate</a> to show your support.</b>"
+						"text": "LuaView ver 1.7develop-20005 Patrick H. Rigney (rigpapa). Support and discussion in the <a href=\"http://forum.micasaverde.com/index.php/topic,103404.0.html\" target=\"_blank\">forum thread</a>; also see the <a href=\"http://www.toggledbits.com/luaview\" target=\"_blank\">documentation</a>. <b>All of my plugins are community-supported; please <a href=\"https://www.toggledbits.com/donate\">donate</a> to show your support.</b>"
 					}
 				}
 			]
@@ -55,21 +55,32 @@
 		},
 		{
 			"Label": {
-				"lang_tag": "tb_luaview_donate",
-				"text": "Donate"
+				"lang_tag": "tb_luaview_log",
+				"text": "LuaUPnP Log"
 			},
 			"Position": 2,
 			"TabType": "javascript",
 			"TopNavigationTab": 1,
 			"ScriptName": "J_LuaView1_UI7.js",
+			"Function": "LuaView.doLog"
+		},
+		{
+			"Label": {
+				"lang_tag": "tb_luaview_donate",
+				"text": "Donate"
+			},
+			"Position": 3,
+			"TabType": "javascript",
+			"TopNavigationTab": 1,
+			"ScriptName": "J_LuaView1_UI7.js",
 			"Function": "LuaView.doDonate"
 		},
-        {
+		{
 			"Label": {
 				"lang_tag": "ui7_advanced",
 				"text": "Advanced"
 			},
-			"Position": 3,
+			"Position": 4,
 			"TabType": "javascript",
 			"ScriptName": "shared.js",
 			"Function": "advanced_device"

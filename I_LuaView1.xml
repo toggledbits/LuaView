@@ -2,11 +2,11 @@
 <implementation>
     <functions>
         -- --------------------------------------------------------------------
-        -- LuaView, Patrick H. Rigney (rigpapa). 
+        -- LuaView, Patrick H. Rigney (rigpapa).
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.6 starting.")
+            luup.log("LuaView 1.7develop-20005 starting.")
             isOpenLuup = false
             for _,v in pairs( luup.devices ) do
                 if v.device_type == "openLuup" then
@@ -26,7 +26,7 @@
             luup.register_handler("LuaViewRequestHandler", "LuaView")
             return true, "OK", "LuaView"
         end
-        
+
         function LuaViewRequestHandler( lul_request, lul_parameters, lul_outputformat )
             local isOpenLuup = luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", dev ) or "0"
             if lul_parameters.action == "saveStartupLua" then
@@ -51,6 +51,19 @@
              elseif lul_parameters.action == "alive" then
                 local json = require "dkjson"
                 return json.encode{ status=true }, 'application/json'
+             elseif lul_parameters.action == "log" then
+                local firstline = tonumber( lul_parameters.first ) or 1
+                local count = tonumber( lul_parameters.count ) or 250
+                local cmd = string.format("awk 'NR&gt;=%d &amp;&amp; NR&lt;%d { print }' &lt; /var/log/cmh/LuaUPnP.log",
+                    firstline, firstline + count)
+                local f = io.popen( cmd )
+                if f then
+                    local lines = f:read("*a")
+                    f:close()
+                    return lines, "text/plain"
+                else
+                    return "LOG READ FAILED\n", "text/plain"
+                end
              elseif lul_parameters.action == "blank" then
                 return '&lt;html&gt;&lt;body bgcolor="white"&gt;Please wait... collecting data&lt;/body&gt;&lt;/html&gt;', "text/html"
              end
