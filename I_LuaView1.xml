@@ -52,11 +52,11 @@
                     firstline, firstline + count)
                 local f = io.popen( cmd )
                 if f then
-                    local lines = f:read("*a")
+                    local lines = string.format("$LOC:%d:\n", firstline) .. f:read("*a")
                     f:close()
                     return lines, "text/plain"
                 else
-                    return "LOG READ FAILED\n", "text/plain"
+                    return "ERROR\nLOG READ FAILED\n", "text/plain"
                 end
              elseif lul_parameters.action == "rotatelogs" then
                 os.execute( "/usr/bin/Rotate_Logs.sh 1" )
@@ -64,7 +64,7 @@
              elseif lul_parameters.action == "blank" then
                 return '&lt;html&gt;&lt;body bgcolor="white"&gt;Please wait... collecting data&lt;/body&gt;&lt;/html&gt;', "text/html"
              end
-             return "ERROR\nInvalid request", "text/plain"
+             return "ERROR\nInvalid request\n", "text/plain"
         end
     </functions>
     <startup>startLuaView</startup>

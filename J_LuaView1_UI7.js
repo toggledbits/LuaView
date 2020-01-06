@@ -4,6 +4,7 @@
  * Configuration interface for LuaView.
  */
 /* globals api,jsonp,jQuery,$,unescape,MultiBox,ace */
+/* jshint multistr: true, laxcomma: true */
 
 //"use strict"; // fails on UI7, works fine with ALTUI
 
@@ -583,15 +584,22 @@ var LuaView = (function(api, $) {
 	var chunkSize = 250;
 
 	function loadNextLogChunk( tries ) {
-		if ( !logTab ) {
-			console.log("Log tab no longer foreground; ignoring.");
+		var container = jQuery( 'div#tblogdata' );
+		if ( !logTab || 0 === container.length ) {
+			logTab = false;
+			console.log("Log tab no longer foreground/available.");
 			return;
 		}
 		tries = tries || 1;
-		if ( tries > 10 ) return; /* give up */
-		var container = jQuery( 'div#tblogdata' );
+		if ( tries > 10 ) {
+			$( "div.tbloadstatus", container ).text( "Too many errors. Giving up." );
+			return;
+		}
 		var lastline = parseInt( container.data( 'lastline' ) || 0 );
 		if ( isNaN(lastline) ) lastline = 0;
+		if ( 0 === lastline ) {
+			logSeenEOF = false;
+		}
 		// $( "div.tbloadstatus", container ).text( "Fetching log data" + ( lastline > 0 ? ( " after " + lastline ) : "" ) );
 		jQuery.ajax( {
 			url: api.getDataRequestURL(),
@@ -604,12 +612,22 @@ var LuaView = (function(api, $) {
 			dataType: "text",
 			timeout: 15000
 		}).done( function( data ) {
+			if ( ! data.match( /^\$LOC:/ ) ) {
+				console.log("Invalid response data: "+data.substring(0,255));
+				$( "div.tbloadstatus", container ).text("Error... retrying... " + String(tries));
+				if ( !logTask ) {
+					logTask = window.setTimeout( function () {
+						logTask = false;
+						loadNextLogChunk( tries+1 );
+					}, 10000 );
+				}
+				return;
+			}
 			data = data.replace( /\r\n/g, "\n" ).replace( /\r/g, "\n" ).replace( /[\u2028\u2029]/g, "\n" );
+			data = data.replace( /^\$LOC:[^\n]*\n/, "" );
 			data = data.replace( /&/, "&amp;" ).replace( /[<]/g, "&lt;" ).replace( /[>]/g, "&gt;" );
 			data = data.replace( /\x1b\[(\d+);1m(.*)\x1b\[0m/g, function( m, p1, p2 ) {
-				var colors = { '30':'white', '31':'red', '32':'green', '33':'#c90',
-							   '34':'blue', '35':'#f3f', '36':'#3ff', '37':'black' };
-				return '<span style="color: ' + colors[p1] + '">' + p2 + '</span>';
+				return '<span class="tbs' + p1 + '">' + p2 + '</span>';
 			});
 			data = data.replace( /\x1b\[1m(.*)\x1b\[0m/g, '<strong>$1</strong>' );
 			data = data.replace( /\x1b\[4m(.*)\x1b\[0m/g, '<u>$1</u>' );
@@ -619,6 +637,7 @@ var LuaView = (function(api, $) {
 				return '<span style="color: #999">&lt;0x' + c.charCodeAt(0).toString(16) + '&gt;</span>';
 			});
 			var nl = 0;
+			var search = $( 'input#searchstring' ).val() || "";
 			if ( data.match( /^[\n\s]*$/ ) ) {
 				console.log("Reached current EOF at " + lastline);
 				logSeenEOF = true;
@@ -629,6 +648,10 @@ var LuaView = (function(api, $) {
 				});
 				logSeenEOF = false;
 			}
+			if ( "" !== search ) {
+				var tp = new RegExp( search, "g" );
+				data = data.replace( tp, '<span class="tbsrch">$&</span>' );
+			}
 			console.log("Received line count: " + nl );
 			var ll = parseInt( container.data( 'lastline' ) || 0 );
 			if ( nl > 0 ) {
@@ -637,7 +660,9 @@ var LuaView = (function(api, $) {
 					ll += nl;
 					container.data( 'lastline', ll ).attr( 'data-lastline', ll );
 					$blk.append( data );
-					logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $blk.position().top + $blk.height() );
+					var n = $( '.tbsrch', $blk ).length;
+					$( 'span#matchcount' ).text( n + " matches" );
+					logAtBottom = ( $blk.scrollTop() + $blk.height() ) >= ( $blk.get(0).scrollHeight - 32 );
 					console.log("data handler: logAtBottom = " + logAtBottom);
 				}
 			}
@@ -678,19 +703,49 @@ var LuaView = (function(api, $) {
 
 		header();
 
-		var html = '<div><button id="rotatelogs" class="btn btn-sm btn-warning">Rotate Log File</button></div><div id="tblogdata"><div class="tbloadstatus">Loading... please wait...</div><pre/><div class="tbloadstatus"/></div>';
+		var html = '<style type="text/css"> \
+div#tblogdata pre { width: 100%; height: 640px; overflow-x: scroll; overflow-y: scroll; } \
+.tbsrch { background-color: yellow; color: black; } \
+.tbs30 { color: white; } \
+.tbs31 { color: red; } \
+.tbs32 { color: green; } \
+.tbs33 { color: #c90; } \
+.tbs34 { color: blue; } \
+.tbs35 { color: #f3f; } \
+.tbs36 { color: #3ff; } \
+.tbs37 { color: black; } \
+</style> \
+<div class="row"> \
+	<div class="col-xs-12 col-sm-12 col-md-9 col-lg-10 form-inline"> \
+		<label>Search Regular Expression: \
+			<input type="text" id="searchstring" class="form-control form-control-sm"> \
+		</label> \
+		<button id="tbnext" class="btn btn-sm btn-primary">Next</button> \
+		<button id="tbprev" class="btn btn-sm btn-primary">Prev</button> \
+		<span id="matchcount" /> \
+	</div> \
+	<div class="col-xs-12 col-sm-12 col-md-3 col-lg-2"> \
+		<button id="rotatelogs" class="btn btn-sm btn-warning">Rotate Log File</button> \
+	</div> \
+</div> \
+<div id="tblogdata"> \
+	<div class="tbloadstatus">Loading... please wait...</div> \
+	<pre/> \
+	<div class="tbloadstatus"/> \
+</div>';
 		html += footer();
 		api.setCpanelContent( html );
 
 		logTab = true;
 		logSeenEOF = false;
 
-		$(window).scroll(function() {
+		var $blk = jQuery( 'div#tblogdata pre' );
+		$blk.scroll(function() {
 			if ( logTab ) {
 				// logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $(document).height() - 108 );
 				// Bottom of scroll window > bottom of <pre> block
-				var $blk = jQuery( 'div#tblogdata pre' );
-				logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $blk.position().top + $blk.height() );
+				// logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $blk.position().top + $blk.height() );
+				logAtBottom = ( $blk.scrollTop() + $blk.height() ) >= ( $blk.get(0).scrollHeight - 32 );
 				console.log("scroll handler: logAtBottom = " + logAtBottom);
 				if ( logAtBottom ) {
 					if ( !logTask ) {
@@ -703,7 +758,7 @@ var LuaView = (function(api, $) {
 		jQuery( 'div#tblogdata' ).data( 'lastline', 0 ).attr( 'data-lastline', 0 );
 		loadNextLogChunk( 0 );
 
-		jQuery( 'button#rotatelogs' ).on( 'click.lauview', function( ev ) {
+		jQuery( 'button#rotatelogs' ).on( 'click.luaview', function( ev ) {
 			var $el = jQuery( ev.target );
 			$el.prop( 'disabled', true );
 			if ( logTask ) {
@@ -725,6 +780,66 @@ var LuaView = (function(api, $) {
 				$el.prop( 'disabled', false );
 				loadNextLogChunk( 0 );
 			});
+		});
+
+		jQuery( 'input#searchstring' ).on( 'change.luaview', function( ev ) {
+			var $el = jQuery( ev.target );
+			var $ct = jQuery( 'div#tblogdata' );
+			var $blk = jQuery( 'div#tblogdata pre' );
+			var search = $el.val() || "";
+			$( '.tbsrch', $blk ).removeClass( 'tbsrch' );
+			$ct.data( 'searchpos', 0 );
+			if ( "" !== search ) {
+				var tp = new RegExp( search, "g" );
+				console.log(tp);
+				var nmatch = 0;
+				$blk.html( $blk.html().replace( tp, function( m ) {
+					return '<span class="tbsrch" data-index="' + (++nmatch) + '">' + m + '</span>';
+				}) );
+				$( 'span#matchcount' ).text( nmatch + " matches" );
+				$( "button#tbnext,button#tbprev" ).prop( 'disabled', 0 === nmatch );
+			} else {
+				$( 'span#matchcount' ).text( "" );
+				$( "button#tbnext,button#tbprev" ).prop( 'disabled', true );
+			}
+		});
+		
+		jQuery( 'button#tbnext' ).on( 'click.luaview', function( ev ) {
+			var $ct = $( 'div#tblogdata' );
+			var $blk = jQuery( 'pre', $ct );
+			var ix = $ct.data( 'searchpos' ) || 0;
+			ix += 1;
+			$el = $( 'span.tbsrch[data-index="' + ix + '"]', $blk );
+			if ( 0 === $el.length ) {
+				ix = 1;
+				$el = $( 'span.tbsrch[data-index="1"]', $blk );
+			}
+			if ( $el.length ) {
+				console.log("Now at " + ix );
+				$blk.animate({
+					scrollTop: $blk.scrollTop() + ( $el.position().top - $blk.position().top )
+                }, 500);
+				$ct.data( 'searchpos', ix );
+			}
+		});
+
+		jQuery( 'button#tbprev' ).on( 'click.luaview', function( ev ) {
+			var $ct = $( 'div#tblogdata' );
+			var $blk = jQuery( 'pre', $ct );
+			var ix = $ct.data( 'searchpos' ) || 0;
+			ix -= 1;
+			$el = $( 'span.tbsrch[data-index="' + ix + '"]', $blk );
+			if ( ix < 1 || 0 === $el.length ) {
+				ix = $( 'span.tbsrch', $blk ).length;
+				$el = $( 'span.tbsrch[data-index="' + ix + '"]', $blk );
+			}
+			if ( $el.length ) {
+				console.log("Now at " + ix );
+				$blk.animate({
+					scrollTop: $blk.scrollTop() + ( $el.position().top - $blk.position().top )
+                }, 500);
+				$ct.data( 'searchpos', ix );
+			}
 		});
 	}
 
