@@ -20,6 +20,9 @@ var LuaView = (function(api, $) {
 	// var deviceType = "urn:schemas-toggledbits-com:device:LuaView:1";
 	var configModified = false;
 	var isOpenLuup = false;
+	var logTab = false;
+	var logAtBottom = false;
+	var logSeenEOF = false;
 
 	function D(m) {
 		console.log("J_LuaView1_UI7.js: " + m);
@@ -34,6 +37,10 @@ var LuaView = (function(api, $) {
 				break;
 			}
 		}
+
+		logTab = false;
+		logAtBottom = false;
+		logSeenEOF = false;
 	}
 
 	/* Push header to document head */
@@ -576,22 +583,28 @@ var LuaView = (function(api, $) {
 	var chunkSize = 250;
 
 	function loadNextLogChunk( tries ) {
+		if ( !logTab ) {
+			console.log("Log tab no longer foreground; ignoring.");
+			return;
+		}
 		tries = tries || 1;
 		if ( tries > 10 ) return; /* give up */
 		var container = jQuery( 'div#tblogdata' );
 		var lastline = parseInt( container.data( 'lastline' ) || 0 );
 		if ( isNaN(lastline) ) lastline = 0;
+		// $( "div.tbloadstatus", container ).text( "Fetching log data" + ( lastline > 0 ? ( " after " + lastline ) : "" ) );
 		jQuery.ajax( {
 			url: api.getDataRequestURL() +
 				"?id=lr_LuaView&action=log&first=" + String( lastline + 1 ) +
 				"&count=" + chunkSize,
-			dataType: "text"
+			dataType: "text",
+			timeout: 15
 		}).done( function( data ) {
 			data = data.replace( /\r\n/g, "\n" ).replace( /\r/g, "\n" ).replace( /[\u2028\u2029]/g, "\n" );
 			data = data.replace( /&/, "&amp;" ).replace( /[<]/g, "&lt;" ).replace( /[>]/g, "&gt;" );
 			data = data.replace( /\x1b\[(\d+);1m(.*)\x1b\[0m/g, function( m, p1, p2 ) {
 				var colors = { '30':'white', '31':'red', '32':'green', '33':'#c90',
-						  '34':'blue', '35':'#f3f', '36':'#3ff', '37':'black' };
+							   '34':'blue', '35':'#f3f', '36':'#3ff', '37':'black' };
 				return '<span style="color: ' + colors[p1] + '">' + p2 + '</span>';
 			});
 			data = data.replace( /\x1b\[1m(.*)\x1b\[0m/g, '<strong>$1</strong>' );
@@ -604,32 +617,42 @@ var LuaView = (function(api, $) {
 			var nl = 0;
 			if ( data.match( /^[\n\s]*$/ ) ) {
 				console.log("Reached current EOF at " + lastline);
-				nl = 0;
+				logSeenEOF = true;
 			} else {
+				/* Count lines */
 				data.replace( /\n/g, function( w ) {
 					nl = nl + 1;
-					return w;
 				});
+				logSeenEOF = false;
 			}
 			console.log("Received line count: " + nl );
 			var ll = parseInt( container.data( 'lastline' ) || 0 );
 			if ( nl > 0 ) {
 				if ( ll === lastline ) {
-					var blk = jQuery( 'div#tblogdata pre' );
+					var $blk = jQuery( 'div#tblogdata pre' );
 					ll += nl;
 					container.data( 'lastline', ll ).attr( 'data-lastline', ll );
-					blk.append( data );
+					$blk.append( data );
+					logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $blk.position().top + $blk.height() );
+					console.log("data handler: logAtBottom = " + logAtBottom);
 				}
 			}
-			if ( !logTask ) {
+			if ( !logTask && ( logAtBottom || !logSeenEOF ) ) {
 				logTask = window.setTimeout( function() {
 					logTask = false;
 					loadNextLogChunk( 0 );
-				}, nl == 0 ? 5000: 1000 );
+				}, ( logSeenEOF && logAtBottom ) ? 2000 : 500 );
+				$( "div.tbloadstatus", container ).text(
+					logSeenEOF ? ( ll + " lines" + ( logAtBottom ? "; waiting for more..." : "" ) )
+							   : ( ll + " so far, requesting more..." )
+				);
+			} else {
+				console.log("Update not scheduled; logTask="+logTask+", logAtBottom="+logAtBottom+
+					", logSeenEOF="+logSeenEOF);
+				if ( logSeenEOF ) {
+					$( "div.tbloadstatus", container ).text( ll + " lines displayed. Scroll to bottom to load more." );
+				}
 			}
-			$( "div.tbloadstatus", container ).text(
-				nl == 0 ? ( "End reached at " + ll + ", waiting for more..." ) : ( ll + " so far, more to go, requesting..." )
-			);
 		}).fail( function() {
 			console.log( "Request failed... retrying" );
 			$( "div.tbloadstatus", container ).text("Error... Luup may be reloading... retrying... " + String(tries));
@@ -648,12 +671,54 @@ var LuaView = (function(api, $) {
 
 		header();
 
-		var html = '<div id="tblogdata"><div class="tbloadstatus">Loading... please wait...</div><pre/><div class="tbloadstatus"/></div>';
+		var html = '<div><button id="rotatelogs" class="btn btn-sm btn-warning">Rotate Log File</button></div><div id="tblogdata"><div class="tbloadstatus">Loading... please wait...</div><pre/><div class="tbloadstatus"/></div>';
 		html += footer();
 		api.setCpanelContent( html );
 
+		logTab = true;
+		logSeenEOF = false;
+
+		$(window).scroll(function() {
+			if ( logTab ) {
+				// logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $(document).height() - 108 );
+				// Bottom of scroll window > bottom of <pre> block
+				var $blk = jQuery( 'div#tblogdata pre' );
+				logAtBottom = ( $(window).scrollTop() + $(window).height() ) > ( $blk.position().top + $blk.height() );
+				console.log("scroll handler: logAtBottom = " + logAtBottom);
+				if ( logAtBottom ) {
+					if ( !logTask ) {
+						loadNextLogChunk( 0 );
+					}
+				}
+			}
+		});
+
 		jQuery( 'div#tblogdata' ).data( 'lastline', 0 ).attr( 'data-lastline', 0 );
 		loadNextLogChunk( 0 );
+
+		jQuery( 'button#rotatelogs' ).on( 'click.lauview', function( ev ) {
+			var $el = jQuery( ev.target );
+			$el.prop( 'disabled', true );
+			if ( logTask ) {
+				clearTimeout( logTask );
+				logTask = false;
+			}
+			$( 'div.tbloadstatus' ).text( "Please wait... requesting log rotation..." );
+			$( 'div#tblogdata pre').empty();
+			$( 'div#tblogdata' ).data( 'lastline', 0 ).attr( 'data-lastline', 0 );
+			jQuery.ajax({
+				url: api.getDataRequestURL,
+				data: {
+					id: "lr_LuaView",
+					action: "rotatelogs"
+				},
+				dataType: "text",
+				timeout: 30
+			}).always( function() {
+				$el.prop( 'disabled', false );
+				loadNextLogChunk( 0 );
+			});
+		});
 	}
 
 	function doDonate()

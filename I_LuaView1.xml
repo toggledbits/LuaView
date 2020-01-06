@@ -7,13 +7,7 @@
         -- --------------------------------------------------------------------
         function startLuaView(dev)
             luup.log("LuaView 1.7develop-20005 starting.")
-            isOpenLuup = false
-            for _,v in pairs( luup.devices ) do
-                if v.device_type == "openLuup" then
-                    isOpenLuup = true
-                    break
-                end
-            end
+            isOpenLuup = luup.openLuup ~= nil
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
             if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
                 luup.log("LuaView resetting static JSON file, Luup reload necessary...")
@@ -64,6 +58,9 @@
                 else
                     return "LOG READ FAILED\n", "text/plain"
                 end
+             elseif lul_parameters.action == "rotatelogs" then
+                os.execute( "/usr/bin/Rotate_Logs.sh 1" )
+                return "OK", "text/plain"
              elseif lul_parameters.action == "blank" then
                 return '&lt;html&gt;&lt;body bgcolor="white"&gt;Please wait... collecting data&lt;/body&gt;&lt;/html&gt;', "text/html"
              end
