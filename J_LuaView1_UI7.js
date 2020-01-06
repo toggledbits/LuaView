@@ -12,7 +12,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.7develop-20005";
+	var pluginVersion = "1.7develop-20005a";
 
 	var myModule = {};
 
@@ -594,11 +594,15 @@ var LuaView = (function(api, $) {
 		if ( isNaN(lastline) ) lastline = 0;
 		// $( "div.tbloadstatus", container ).text( "Fetching log data" + ( lastline > 0 ? ( " after " + lastline ) : "" ) );
 		jQuery.ajax( {
-			url: api.getDataRequestURL() +
-				"?id=lr_LuaView&action=log&first=" + String( lastline + 1 ) +
-				"&count=" + chunkSize,
+			url: api.getDataRequestURL(),
+			data: {
+				id: "lr_LuaView",
+				action: "log",
+				first: ( lastline + 1 ),
+				count: chunkSize
+			},
 			dataType: "text",
-			timeout: 15
+			timeout: 15000
 		}).done( function( data ) {
 			data = data.replace( /\r\n/g, "\n" ).replace( /\r/g, "\n" ).replace( /[\u2028\u2029]/g, "\n" );
 			data = data.replace( /&/, "&amp;" ).replace( /[<]/g, "&lt;" ).replace( /[>]/g, "&gt;" );
@@ -653,8 +657,11 @@ var LuaView = (function(api, $) {
 					$( "div.tbloadstatus", container ).text( ll + " lines displayed. Scroll to bottom to load more." );
 				}
 			}
-		}).fail( function() {
+		}).fail( function( jqXHR, textStatus, errorThrown ) {
 			console.log( "Request failed... retrying" );
+			console.log( jqXHR );
+			console.log( textStatus );
+			console.log( errorThrown );
 			$( "div.tbloadstatus", container ).text("Error... Luup may be reloading... retrying... " + String(tries));
 			if ( !logTask ) {
 				logTask = window.setTimeout( function () {
@@ -713,7 +720,7 @@ var LuaView = (function(api, $) {
 					action: "rotatelogs"
 				},
 				dataType: "text",
-				timeout: 30
+				timeout: 30000
 			}).always( function() {
 				$el.prop( 'disabled', false );
 				loadNextLogChunk( 0 );
