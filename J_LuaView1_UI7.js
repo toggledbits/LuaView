@@ -803,7 +803,7 @@ div#tblogdata pre { width: 100%; height: 640px; overflow-x: scroll; overflow-y: 
 				$( "button#tbnext,button#tbprev" ).prop( 'disabled', true );
 			}
 		});
-		
+
 		jQuery( 'button#tbnext' ).on( 'click.luaview', function( ev ) {
 			var $ct = $( 'div#tblogdata' );
 			var $blk = jQuery( 'pre', $ct );
