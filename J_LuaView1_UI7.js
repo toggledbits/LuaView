@@ -13,7 +13,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.7develop-20005a";
+	var pluginVersion = "1.7develop-20050";
 
 	var myModule = {};
 
@@ -607,7 +607,8 @@ var LuaView = (function(api, $) {
 				id: "lr_LuaView",
 				action: "log",
 				first: ( lastline + 1 ),
-				count: chunkSize
+				count: chunkSize,
+				r: Math.random()
 			},
 			dataType: "text",
 			timeout: 15000
@@ -769,10 +770,11 @@ div#tblogdata pre { width: 100%; height: 640px; overflow-x: scroll; overflow-y: 
 			$( 'div#tblogdata pre').empty();
 			$( 'div#tblogdata' ).data( 'lastline', 0 ).attr( 'data-lastline', 0 );
 			jQuery.ajax({
-				url: api.getDataRequestURL,
+				url: api.getDataRequestURL(),
 				data: {
 					id: "lr_LuaView",
-					action: "rotatelogs"
+					action: "rotatelogs",
+					r: Math.random()
 				},
 				dataType: "text",
 				timeout: 30000
