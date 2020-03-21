@@ -7,7 +7,7 @@
         -- --------------------------------------------------------------------
         function startLuaView(dev)
             luup.log("LuaView 1.7 starting.")
-            isOpenLuup = luup.openLuup ~= nil
+            local isOpenLuup = luup.openLuup ~= nil
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
             if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
                 luup.log("LuaView resetting static JSON file, Luup reload necessary...")
@@ -70,9 +70,14 @@
                 local json = require "dkjson"
                 return json.encode{ status=true }, 'application/json'
              elseif lul_parameters.action == "log" then
+                local isOpenLuup = luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", dev ) or "0"
+                local fpath = luup.variable_get( "urn:toggledbits-com:serviceId:LuaView1", "LogPath", dev ) or ""
+                if fpath == "" then
+                    fpath = isOpenLuup and "./logs/LuaUPnP.log" or "/var/log/cmh/LuaUPnP.log"
+                end
                 local firstline = tonumber( lul_parameters.first ) or 1
                 local count = tonumber( lul_parameters.count ) or 250
-                local cmd = string.format("awk 'NR&gt;=%d &amp;&amp; NR&lt;%d { print }' &lt; /var/log/cmh/LuaUPnP.log",
+                local cmd = string.format("awk 'NR&gt;=%d &amp;&amp; NR&lt;%d { print }' &lt; "..fpath,
                     firstline, firstline + count)
                 local f = io.popen( cmd )
                 if f then
