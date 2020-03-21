@@ -6,7 +6,7 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.7develop-20005 starting.")
+            luup.log("LuaView 1.7 starting.")
             isOpenLuup = luup.openLuup ~= nil
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
             if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
@@ -42,6 +42,30 @@
                     return json.encode{ status=false, message=err }, "application/json"
                 end
                 return json.encode{ status=true, message="Lua OK" }, "application/json"
+             elseif lul_parameters.action == "runlua" then
+                local f,err = loadstring( lul_parameters.lua or "" )
+                local json = require "dkjson"
+                if err then
+                    return json.encode{ status=false, message=err }, "application/json"
+                end
+                local stream = {}
+                local env = getfenv(0)
+                local zenv = {}
+                -- Clone the environment
+                for k,v in pairs(env) do zenv[k]=v end
+                -- Clone luup separately so we can mess with it.
+                zenv.luup = {}
+                for k,v in pairs(env.luup) do zenv.luup[v] = v end
+                zenv.luup.log = function( m, l )
+                    table.insert( stream, string.format( "%02d      %s  %s", tonumber(l) or 1,
+                        os.date("%Y-%m-%d %H:%M:%S   "), tostring(m) ) )
+                end
+                zenv.print = function( ... ) zenv.luup.log( table.concat( arg, "\t" ), 50 ) end
+                -- Override and restrict call_delay and call_timer?
+                setfenv(f, zenv)
+                local res = f()
+                table.insert( stream, "END OF EXECUTION -- return value: (" .. type(res) .. ")" .. tostring(res) )
+                return json.encode{ status=true, log=stream }, "application/json"
              elseif lul_parameters.action == "alive" then
                 local json = require "dkjson"
                 return json.encode{ status=true }, 'application/json'

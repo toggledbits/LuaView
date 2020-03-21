@@ -13,7 +13,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.7develop-20050";
+	var pluginVersion = "1.7";
 
 	var myModule = {};
 
@@ -159,6 +159,7 @@ var LuaView = (function(api, $) {
 				return;
 			} else if ( data.status === false ) { /* specific false, not undefined */
 				jQuery( 'div.editor', row ).prepend( jQuery( '<div class="tberrmsg"/>' ).text( data.message || "Error in Lua" ) );
+				$( 'button.runlua', row ).prop( 'disabled', true );
 			}
 		}).fail( function( stat ) {
 			console.log("Failed to check Lua: " + stat);
@@ -189,6 +190,7 @@ var LuaView = (function(api, $) {
 			}).done( function( data, statusText, jqXHR ) {
 				if ( "OK" === data ) {
 					row.removeClass("modified");
+					$('button.runlua', row).prop( 'disabled', false );
 					if ( ! isOpenLuup ) {
 						try {
 							/* ??? Discovered/undocumented/unpublished */
@@ -242,6 +244,7 @@ var LuaView = (function(api, $) {
 					D("Save returns " + jqXHR.responseText);
 					if ( data == "OK" ) {
 						row.removeClass("modified");
+						$('button.runlua', row).prop( 'disabled', false );
 						if ( ! isOpenLuup ) {
 							try {
 								/* ??? Discovered/undocumented/unpublished */
@@ -278,7 +281,9 @@ var LuaView = (function(api, $) {
 
 	function handleEditorChange( editor, session, delta ) {
 		configModified = true;
-		jQuery( editor.container ).closest('div.row').addClass('modified');
+		var $row = jQuery( editor.container ).closest('div.row');
+		$row.addClass('modified');
+		$('button.runlua', $row).prop( 'disabled', true );
 	}
 
 	function handleEditorSave( editor, session, ev ) {
@@ -303,6 +308,7 @@ var LuaView = (function(api, $) {
 			}).done( function( data, statusText, jqXHR ) {
 				if ( "OK" === data ) {
 					row.removeClass("modified");
+					$( 'button.runlua', row ).prop( 'disabled', false );
 					if ( ! isOpenLuup ) {
 						try {
 							/* ??? Discovered/undocumented/unpublished */
@@ -353,6 +359,7 @@ var LuaView = (function(api, $) {
 					D("Save returns " + jqXHR.responseText);
 					if ( data == "OK" ) {
 						row.removeClass("modified");
+						$( 'button.runlua', row ).prop( 'disabled', false );
 						if ( ! isOpenLuup ) {
 							try {
 								/* ??? Discovered/undocumented/unpublished */
@@ -537,7 +544,7 @@ var LuaView = (function(api, $) {
 			if ( scenes[i].hidden ) {
 				sn += " (hidden)";
 			}
-			jQuery('div.scenename', el).text( sn );
+			jQuery('div.scenename', el).text( sn ); // .append( '<div><button class="runlua btn btn-xs btn-success">Test Run</button></div>' );
 			el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10" />');
 			code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
 			if ( ! window.ace ) {
