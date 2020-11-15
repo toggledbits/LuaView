@@ -13,7 +13,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.7";
+	var pluginVersion = "1.8develop-20320";
 
 	var myModule = {};
 
@@ -441,6 +441,7 @@ var LuaView = (function(api, $) {
 
 		var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
 		if ( "" !== code ) {
+			code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
 			txt += "-- Startup Lua\n";
 			txt += code;
 			txt += "\n\n";
@@ -454,6 +455,7 @@ var LuaView = (function(api, $) {
 			var scene = scenes[i];
 			code = ( parseInt( scene.encoded_lua || 0 ) ? atob( scene.lua ) : scene.lua ) || "";
 			if ( "" !== code ) {
+				code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
 				txt += '-- ' + '-'.repeat( 117 ) + "\n";
 				txt += '-- Scene #' + String( scene.id ) + ": " + String( scene.name ) + "\n";
 				txt += code;
@@ -503,6 +505,7 @@ var LuaView = (function(api, $) {
 		list.append(el);
 
 		var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
+		code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
 		el = jQuery('<div class="coderow row" />');
 		el.attr('id', '__startup');
 		el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
@@ -547,6 +550,7 @@ var LuaView = (function(api, $) {
 			jQuery('div.scenename', el).text( sn ); // .append( '<div><button class="runlua btn btn-xs btn-success">Test Run</button></div>' );
 			el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10" />');
 			code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
+			code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
 			if ( ! window.ace ) {
 				doTextArea( jQuery("div.editor", el), code );
 			} else {
