@@ -13,7 +13,7 @@ var LuaView = (function(api, $) {
 	/* unique identifier for this plugin... */
 	var uuid = '7513412a-a7e8-11e8-afe3-74d4351650de';
 
-	var pluginVersion = "1.8develop-20320";
+	var pluginVersion = "1.8develop-20353";
 
 	var myModule = {};
 
@@ -53,7 +53,7 @@ var LuaView = (function(api, $) {
 		var s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "LoadACE" ) || "1";
 		if ( "0" !== s && ! window.ace ) {
 			s = api.getDeviceState( api.getCpanelDeviceId(), serviceId, "ACEURL" ) || "";
-			if ( "" === s ) s = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js";
+			if ( "" === s ) s = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js";
 			jQuery( "head" ).append( '<script src="' + s + '"></script>' );
 			// jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/mode-lua.js"></script>' );
 			// jQuery( "head" ).append( '<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/theme-xcode.js"></script>' );
@@ -158,7 +158,7 @@ var LuaView = (function(api, $) {
 				/* Good Lua */
 				return;
 			} else if ( data.status === false ) { /* specific false, not undefined */
-				jQuery( 'div.editor', row ).prepend( jQuery( '<div class="tberrmsg"/>' ).text( data.message || "Error in Lua" ) );
+				jQuery( 'div.editor', row ).prepend( jQuery( '<div class="tberrmsg"></div>' ).text( data.message || "Error in Lua" ) );
 				$( 'button.runlua', row ).prop( 'disabled', true );
 			}
 		}).fail( function( stat ) {
@@ -467,7 +467,7 @@ var LuaView = (function(api, $) {
 		if (win) {
 			setTimeout( function() {
 				var $body = jQuery( win.document.body );
-				var $pre = jQuery( '<pre/>' ).text( txt );
+				var $pre = jQuery( '<pre></pre>' ).text( txt );
 				$body.empty().append( $pre );
 			}, 1000 );
 			win.focus();
@@ -489,7 +489,7 @@ var LuaView = (function(api, $) {
 			sortopt = [ "name", "asc" ];
 		}
 
-		var el = jQuery('<div class="sortrow row form-inline" />');
+		var el = jQuery('<div class="sortrow row form-inline"></div>');
 		el.append('<div class="col-xs-8">Sort by: <select id="sortby" class="form-control form-control-sm"><option value="name">Name</option><option value="id">ID</option></select><select id="sortasc" class="form-control form-control-sm"><option value="asc">ascending</option><option value="desc">descending</option></select></div>');
 		jQuery('select#sortby', el).val( sortopt[0] );
 		jQuery('select#sortasc', el).val( sortopt[1] );
@@ -506,14 +506,14 @@ var LuaView = (function(api, $) {
 
 		var code = ( parseInt(ud.encoded_lua || 0) ? atob( ud.StartupCode ) : ud.StartupCode ) || "";
 		code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
-		el = jQuery('<div class="coderow row" />');
+		el = jQuery('<div class="coderow row"></div>');
 		el.attr('id', '__startup');
 		el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2">Startup Lua</div>');
-		el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10" />');
+		el.append('<div id="editorStartup" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
 		if ( ! window.ace ) {
 			doTextArea( jQuery("div.editor", el), code );
 		} else {
-			jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+			jQuery( 'div.editor', el ).append( '<div class="luacode"></div>' );
 			doEditor( jQuery("div.luacode", el), code );
 		}
 		list.append(el);
@@ -540,21 +540,26 @@ var LuaView = (function(api, $) {
 			if ( undefined !== scenes[i].notification_only ) {
 				continue;
 			}
-			el = jQuery('<div class="coderow row" />');
+			el = jQuery('<div class="coderow row"></div>');
 			el.attr('id', scenes[i].id);
-			el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2" />');
+			el.append('<div class="scenename col-xs-12 col-md-3 col-lg-2"></div>');
 			var sn = (scenes[i].name || scenes[i].id) + ' (' + scenes[i].id + ')';
 			if ( scenes[i].hidden ) {
 				sn += " (hidden)";
 			}
 			jQuery('div.scenename', el).text( sn ); // .append( '<div><button class="runlua btn btn-xs btn-success">Test Run</button></div>' );
-			el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10" />');
+			el.append('<div id="editor' + scenes[i].id + '" class="editor col-xs-12 col-md-9 col-lg-10"></div>');
 			code = ( parseInt( scenes[i].encoded_lua || 0 ) ? atob( scenes[i].lua ) : scenes[i].lua ) || "";
-			code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
+            try {
+                code = decodeURIComponent(escape(code)); /* UTF-8 handling, reversal */
+            } catch( e ) {
+                console.log(e);
+                alert(e);
+            }
 			if ( ! window.ace ) {
 				doTextArea( jQuery("div.editor", el), code );
 			} else {
-				jQuery( 'div.editor', el ).append( '<div class="luacode"/>' );
+				jQuery( 'div.editor', el ).append( '<div class="luacode"></div>' );
 				doEditor( jQuery("div.luacode", el), code );
 			}
 			list.append(el);
@@ -734,7 +739,7 @@ div#tblogdata pre { width: 100%; height: 640px; overflow-x: scroll; overflow-y: 
 		</label> \
 		<button id="tbnext" class="btn btn-sm btn-primary">Next</button> \
 		<button id="tbprev" class="btn btn-sm btn-primary">Prev</button> \
-		<span id="matchcount" /> \
+		<span id="matchcount"></span> \
 	</div> \
 	<div class="col-xs-12 col-sm-12 col-md-3 col-lg-2"> \
 		<button id="rotatelogs" class="btn btn-sm btn-warning">Rotate Log File</button> \
@@ -742,8 +747,8 @@ div#tblogdata pre { width: 100%; height: 640px; overflow-x: scroll; overflow-y: 
 </div> \
 <div id="tblogdata"> \
 	<div class="tbloadstatus">Loading... please wait...</div> \
-	<pre/> \
-	<div class="tbloadstatus"/> \
+	<pre></pre> \
+	<div class="tbloadstatus"></div> \
 </div>';
 		html += footer();
 		api.setCpanelContent( html );

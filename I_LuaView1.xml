@@ -6,7 +6,7 @@
         -- Completely and totally open source. Contributions welcome!
         -- --------------------------------------------------------------------
         function startLuaView(dev)
-            luup.log("LuaView 1.8develop-20320 starting.")
+            luup.log("LuaView 1.8develop-20353 starting.")
             local isOpenLuup = luup.openLuup ~= nil
             luup.variable_set( "urn:toggledbits-com:serviceId:LuaView1", "isOpenLuup", isOpenLuup and "1" or "0", dev )
             if luup.attr_get( "device_json", dev ) ~= "D_LuaView1.json" then
